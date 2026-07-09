@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PII Connect — Alumni Network</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#c8401e;--ink:#0e0e0c;--paper:#faf9f5;--warm:#f3f0e8;--rule:rgba(14,14,12,0.12);
+  --serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+  --ok:#1a6b3a;--ok-bg:#edf7f1;--err:#9b2020;--err-bg:#fdf0f0;--warn:#7a5c12;--warn-bg:#fdf8ec;
+  --sidebar:248px;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;overflow:hidden}
+#loading{position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.load-ring{width:38px;height:38px;border:2px solid rgba(200,64,30,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.load-txt{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.35)}
+#app{display:none;height:100vh;flex-direction:column}
+#app.ready{display:flex}
+.topbar{height:64px;background:var(--ink);display:flex;align-items:center;padding:0 28px;gap:14px;flex-shrink:0;z-index:200}
+.topbar-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.t-ring{width:36px;height:36px;border:1.5px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.t-ring span{font-family:var(--serif);font-size:11px;font-weight:700;color:var(--accent)}
+.t-wm{font-family:var(--serif);font-size:15px;font-weight:700;color:#fff}
+.t-sub{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:1px}
+.t-div{width:1px;height:22px;background:rgba(255,255,255,.1)}
+.rb{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:3px 10px;border-radius:20px}
+.rb.admin{background:rgba(200,64,30,.25);color:#e8795a}
+.rb.alumni{background:rgba(255,255,255,.1);color:rgba(255,255,255,.55)}
+.t-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.t-name{font-size:13px;color:#fff;font-weight:500}
+.t-email{font-size:11px;color:rgba(255,255,255,.35)}
+.btn-ghost{background:none;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:2px;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.btn-ghost:hover{background:rgba(255,255,255,.08);color:#fff}
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:var(--sidebar);background:#fff;border-right:1px solid var(--rule);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.sb-sect{padding:18px 0 4px}
+.sb-lbl{font-size:9px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:rgba(14,14,12,.3);padding:0 18px;margin-bottom:4px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 18px;width:100%;background:none;border:none;border-left:3px solid transparent;font-family:var(--sans);font-size:13px;color:rgba(14,14,12,.5);cursor:pointer;transition:all .15s;text-align:left;position:relative}
+.nav-btn:hover{background:var(--warm);color:var(--ink)}
+.nav-btn.active{color:var(--accent);border-left-color:var(--accent);background:rgba(200,64,30,.05);font-weight:600}
+.ni{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.nav-dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.main{flex:1;overflow-y:auto;background:var(--paper)}
+.mi{padding:36px 44px;max-width:1300px}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--rule)}
+.ph h1{font-family:var(--serif);font-size:26px;font-weight:700}
+.ph p{font-size:12px;color:rgba(14,14,12,.4);margin-top:4px}
+.ph-act{display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.btn{font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:2px;border:none;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.88}
+.btn-outline{background:none;border:1.5px solid var(--rule);color:var(--ink)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--err-bg);color:var(--err);border:1px solid rgba(155,32,32,.2)}.btn-danger:hover{background:#fce0e0}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.ssm{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:26px}
+.sc{background:#fff;border:1px solid var(--rule);padding:22px;border-radius:2px}
+.sl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(14,14,12,.38);margin-bottom:8px}
+.sv{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1}
+.sv.ac{color:var(--accent)}
+.ss{font-size:12px;color:rgba(14,14,12,.38);margin-top:6px}
+.tw{background:#fff;border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 16px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:rgba(14,14,12,.38);border-bottom:2px solid var(--rule);white-space:nowrap;background:var(--warm)}
+td{padding:11px 16px;border-bottom:1px solid var(--rule);color:rgba(14,14,12,.72);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.dr:hover td{background:rgba(243,240,232,.5)}
+td strong{color:var(--ink);font-weight:600}
+.pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:20px}
+.pill.open{background:var(--ok-bg);color:var(--ok)}
+.pill.closed{background:var(--err-bg);color:var(--err)}
+.pill.pending{background:var(--warn-bg);color:var(--warn)}
+.pill.admin{background:rgba(200,64,30,.1);color:var(--accent)}
+.pill.alumni{background:var(--warm);color:rgba(14,14,12,.45);border:1px solid var(--rule)}
+.cc{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:18px 22px;margin-bottom:10px}
+.cc-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.cc-meta{font-size:11px;color:rgba(14,14,12,.38);margin-bottom:5px}
+.cc-desc{font-size:13px;color:rgba(14,14,12,.6);line-height:1.6}
+.mo{position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.mo.open{display:flex}
+.modal{background:var(--paper);border-radius:2px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:36px 40px}
+.modal-title{font-family:var(--serif);font-size:22px;font-weight:700;margin-bottom:22px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--rule)}
+.fg{display:grid;gap:15px}
+.fg2{grid-template-columns:1fr 1fr}
+.fl label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:rgba(14,14,12,.45);margin-bottom:5px}
+.fl input,.fl select,.fl textarea{width:100%;padding:10px 12px;border:1.5px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--warm);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:var(--accent)}
+.fl textarea{resize:vertical;min-height:90px}
+#toast{position:fixed;bottom:22px;right:22px;z-index:1000;background:var(--ink);color:#fff;padding:11px 18px;border-radius:2px;font-size:13px;border-left:3px solid var(--accent);transform:translateY(16px);opacity:0;transition:all .3s;pointer-events:none;max-width:340px}
+#toast.show{transform:translateY(0);opacity:1}
+.empty{text-align:center;padding:48px 24px;color:rgba(14,14,12,.3)}
+.ei{font-size:26px;margin-bottom:10px}.et{font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---- Connect-specific ---- */
+.searchbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.searchbar input,.searchbar select{padding:9px 12px;border:1.5px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:13px;background:#fff;outline:none}
+.searchbar input{flex:1;min-width:200px}
+.searchbar input:focus,.searchbar select:focus{border-color:var(--accent)}
+
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.acard{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:20px;cursor:pointer;transition:all .15s}
+.acard:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(14,14,12,.05)}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--warm);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:16px;flex-shrink:0}
+.avatar.sm{width:32px;height:32px;font-size:12px}
+.avatar.lg{width:72px;height:72px;font-size:24px}
+.acard-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.acard-name{font-weight:600;font-size:14px}
+.acard-head{font-size:12px;color:rgba(14,14,12,.5)}
+.acard-meta{font-size:11px;color:rgba(14,14,12,.4);line-height:1.6}
+.tag{display:inline-block;font-size:10px;background:var(--warm);color:rgba(14,14,12,.5);padding:2px 8px;border-radius:20px;margin:2px 4px 0 0}
+
+.msg-layout{display:flex;height:calc(100vh - 190px);background:#fff;border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.conv-list{width:280px;border-right:1px solid var(--rule);overflow-y:auto;flex-shrink:0}
+.conv-item{padding:14px 16px;border-bottom:1px solid var(--rule);cursor:pointer;display:flex;gap:10px;align-items:center}
+.conv-item:hover{background:var(--warm)}
+.conv-item.active{background:rgba(200,64,30,.06);border-left:3px solid var(--accent)}
+.conv-title{font-size:13px;font-weight:600}
+.conv-prev{font-size:11px;color:rgba(14,14,12,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.thread-pane{flex:1;display:flex;flex-direction:column}
+.thread-head{padding:14px 20px;border-bottom:1px solid var(--rule);font-weight:600;font-size:14px}
+.thread-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:65%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.5}
+.bubble.mine{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:2px}
+.bubble.theirs{align-self:flex-start;background:var(--warm);color:var(--ink);border-bottom-left-radius:2px}
+.bubble-meta{font-size:9px;opacity:.6;margin-top:4px}
+.thread-input{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--rule)}
+.thread-input input{flex:1;padding:10px 12px;border:1.5px solid var(--rule);border-radius:20px;font-family:var(--sans);font-size:13px;background:var(--warm);outline:none}
+.thread-input input:focus{border-color:var(--accent)}
+
+.cat-list{display:grid;gap:12px;margin-bottom:26px}
+.cat-card{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:18px 22px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.cat-card:hover{border-color:var(--accent)}
+.cat-name{font-family:var(--serif);font-size:16px;font-weight:700}
+.cat-desc{font-size:12px;color:rgba(14,14,12,.45);margin-top:3px}
+.cat-count{font-size:11px;color:rgba(14,14,12,.35)}
+.thread-row{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:16px 20px;margin-bottom:8px;cursor:pointer}
+.thread-row:hover{border-color:var(--accent)}
+.thread-row-title{font-weight:600;font-size:14px}
+.thread-row-meta{font-size:11px;color:rgba(14,14,12,.4);margin-top:4px}
+.reply{border-top:1px solid var(--rule);padding:16px 0}
+.reply-meta{font-size:11px;color:rgba(14,14,12,.4);margin-bottom:6px}
+.reply-body{font-size:13px;line-height:1.7;color:rgba(14,14,12,.8)}
+
+.jcard,.ecard{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:20px 22px;margin-bottom:12px}
+.jcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.jcard-title{font-family:var(--serif);font-size:17px;font-weight:700}
+.jcard-co{font-size:13px;color:var(--accent);font-weight:600;margin-top:2px}
+.jcard-meta{font-size:11px;color:rgba(14,14,12,.4);margin-top:6px}
+.jcard-desc{font-size:13px;color:rgba(14,14,12,.65);line-height:1.6;margin-top:10px}
+.ecard{display:flex;gap:18px}
+.edate{width:64px;flex-shrink:0;text-align:center;background:var(--warm);border-radius:2px;padding:10px 0}
+.edate .mon{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.edate .day{font-family:var(--serif);font-size:24px;font-weight:700;line-height:1.2}
+.ebody{flex:1}
+.etitle{font-family:var(--serif);font-size:16px;font-weight:700}
+.emeta{font-size:12px;color:rgba(14,14,12,.45);margin-top:4px}
+.edesc{font-size:13px;color:rgba(14,14,12,.6);line-height:1.6;margin-top:8px}
+
+.ann-card{background:#fff;border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:2px;padding:18px 22px;margin-bottom:12px}
+.ann-card.pinned{background:rgba(200,64,30,.04)}
+.ann-title{font-family:var(--serif);font-size:16px;font-weight:700}
+.ann-meta{font-size:11px;color:rgba(14,14,12,.4);margin:4px 0 8px}
+.ann-body{font-size:13px;color:rgba(14,14,12,.7);line-height:1.7;white-space:pre-wrap}
+
+.admin-tabs{display:flex;gap:4px;margin-bottom:22px;border-bottom:1px solid var(--rule)}
+.admin-tab{padding:9px 16px;font-size:12px;font-weight:600;letter-spacing:.03em;color:rgba(14,14,12,.45);cursor:pointer;border-bottom:2px solid transparent}
+.admin-tab.active{color:var(--accent);border-color:var(--accent)}
+.chk-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.chk-row:last-child{border-bottom:none}
+
+@media(max-width:900px){.sidebar{display:none}.mi{padding:20px}.fg2{grid-template-columns:1fr}.msg-layout{flex-direction:column;height:auto}.conv-list{width:100%;max-height:200px}}
+</style>
+</head>
+<body>
+<div id="loading"><div class="load-ring"></div><p class="load-txt" id="load-msg">Loading PII Connect</p></div>
+<div id="toast"></div>
+
+<div id="app">
+  <div class="topbar">
+    <a class="topbar-brand" href="#">
+      <div class="t-ring"><span>PII</span></div>
+      <div><div class="t-wm">PII Connect</div><div class="t-sub">Alumni Network</div></div>
+    </a>
+    <div class="t-div"></div>
+    <span class="rb" id="roleBadge"></span>
+    <div class="t-right">
+      <div><div class="t-name" id="tName"></div><div class="t-email" id="tEmail"></div></div>
+      <button class="btn-ghost" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sb-sect">
+        <div class="sb-lbl">Home</div>
+        <button class="nav-btn" data-view="home" onclick="nav('home')"><span class="ni">◈</span> Feed</button>
+      </div>
+      <div class="sb-sect">
+        <div class="sb-lbl">Connect</div>
+        <button class="nav-btn" data-view="directory" onclick="nav('directory')"><span class="ni">☰</span> Alumni Directory</button>
+        <button class="nav-btn" data-view="messages" onclick="nav('messages')"><span class="ni">✉</span> Messages</button>
+        <button class="nav-btn" data-view="forums" onclick="nav('forums')"><span class="ni">◎</span> Forums</button>
+      </div>
+      <div class="sb-sect">
+        <div class="sb-lbl">Opportunities</div>
+        <button class="nav-btn" data-view="jobs" onclick="nav('jobs')"><span class="ni">▣</span> Jobs Board</button>
+        <button class="nav-btn" data-view="events" onclick="nav('events')"><span class="ni">◷</span> Events</button>
+        <button class="nav-btn" data-view="announcements" onclick="nav('announcements')"><span class="ni">◆</span> Announcements</button>
+      </div>
+      <div class="sb-sect" id="adminNavSect" style="display:none">
+        <div class="sb-lbl">Admin</div>
+        <button class="nav-btn" data-view="admin" onclick="nav('admin')"><span class="ni">⚙</span> Manage Alumni</button>
+      </div>
+    </div>
+
+    <div class="main"><div class="mi" id="view"></div></div>
+  </div>
+</div>
+
+<!-- Profile modal -->
+<div class="mo" id="m-profile"><div class="modal" id="m-profile-body"></div></div>
+<!-- New conversation modal -->
+<div class="mo" id="m-newmsg"><div class="modal">
+  <div class="modal-title">New Message</div>
+  <div class="fg">
+    <div class="fl"><label>To</label><input type="text" id="nm-search" placeholder="Search alumni by name…" oninput="searchRecipients()"/></div>
+    <div id="nm-results" style="max-height:180px;overflow-y:auto"></div>
+    <div id="nm-selected" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-newmsg')">Cancel</button>
+    <button class="btn btn-primary" onclick="startConversation()">Start Conversation</button>
+  </div>
+</div></div>
+<!-- New thread modal -->
+<div class="mo" id="m-thread"><div class="modal">
+  <div class="modal-title">New Thread</div>
+  <div class="fg">
+    <div class="fl"><label>Title</label><input type="text" id="th-title"/></div>
+    <div class="fl"><label>Post</label><textarea id="th-body" rows="5"></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-thread')">Cancel</button>
+    <button class="btn btn-primary" onclick="createThread()">Post Thread</button>
+  </div>
+</div></div>
+<!-- Job modal -->
+<div class="mo" id="m-job"><div class="modal">
+  <div class="modal-title">Post a Job</div>
+  <div class="fg">
+    <div class="fg fg2">
+      <div class="fl"><label>Title</label><input type="text" id="job-title"/></div>
+      <div class="fl"><label>Company</label><input type="text" id="job-company"/></div>
+    </div>
+    <div class="fg fg2">
+      <div class="fl"><label>Location</label><input type="text" id="job-location" placeholder="Boston, MA"/></div>
+      <div class="fl"><label>Type</label><select id="job-type"><option value="full_time">Full-time</option><option value="part_time">Part-time</option><option value="contract">Contract</option><option value="internship">Internship</option></select></div>
+    </div>
+    <div class="fl"><label><input type="checkbox" id="job-remote" style="width:auto;display:inline-block;margin-right:6px"/>Remote OK</label></div>
+    <div class="fl"><label>Description</label><textarea id="job-desc" rows="4"></textarea></div>
+    <div class="fg fg2">
+      <div class="fl"><label>Apply URL</label><input type="text" id="job-url"/></div>
+      <div class="fl"><label>Apply Email</label><input type="email" id="job-email"/></div>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-job')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveJob()">Post Job</button>
+  </div>
+</div></div>
+<!-- Event modal -->
+<div class="mo" id="m-event"><div class="modal">
+  <div class="modal-title">New Event</div>
+  <div class="fg">
+    <div class="fl"><label>Title</label><input type="text" id="ev-title"/></div>
+    <div class="fg fg2">
+      <div class="fl"><label>Starts</label><input type="datetime-local" id="ev-start"/></div>
+      <div class="fl"><label>Ends</label><input type="datetime-local" id="ev-end"/></div>
+    </div>
+    <div class="fl"><label><input type="checkbox" id="ev-virtual" style="width:auto;display:inline-block;margin-right:6px" onchange="document.getElementById('ev-loc-wrap').style.display=this.checked?'none':'block';document.getElementById('ev-link-wrap').style.display=this.checked?'block':'none'"/>Virtual Event</label></div>
+    <div class="fl" id="ev-loc-wrap"><label>Location</label><input type="text" id="ev-location"/></div>
+    <div class="fl" id="ev-link-wrap" style="display:none"><label>Virtual Link</label><input type="text" id="ev-link"/></div>
+    <div class="fl"><label>Description</label><textarea id="ev-desc" rows="4"></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-event')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveEvent()">Create Event</button>
+  </div>
+</div></div>
+<!-- Announcement modal -->
+<div class="mo" id="m-ann"><div class="modal">
+  <div class="modal-title">Post Announcement to All Alumni</div>
+  <div class="fg">
+    <div class="fl"><label>Title</label><input type="text" id="ann-title"/></div>
+    <div class="fl"><label>Message</label><textarea id="ann-body" rows="6"></textarea></div>
+    <div class="fl"><label><input type="checkbox" id="ann-pin" style="width:auto;display:inline-block;margin-right:6px"/>Pin to top</label></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-ann')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveAnnouncement()">Post to All Alumni</button>
+  </div>
+</div></div>
+<!-- Add alumni modal -->
+<div class="mo" id="m-addalum"><div class="modal">
+  <div class="modal-title">Add Alumni</div>
+  <div class="fg">
+    <div class="fl"><label>Email</label><input type="email" id="aa-email"/></div>
+    <div class="fl"><label>Full Name</label><input type="text" id="aa-name"/></div>
+    <div class="fl"><label>Program</label><input type="text" id="aa-program" placeholder="e.g. DSIPP'22"/></div>
+  </div>
+  <p style="font-size:12px;color:rgba(14,14,12,.5);margin-top:10px;line-height:1.6">If this email already has a PII Learn account, access unlocks the next time they sign in. Otherwise they'll get a "Join with Invite" link.</p>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-addalum')">Cancel</button>
+    <button class="btn btn-primary" onclick="addAlumniManual()">Add to Alumni List</button>
+  </div>
+</div></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPA_URL = 'https://adtgtzblbneqedkysurk.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdGd0emJsYm5lcWVka3lzdXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM2MTcsImV4cCI6MjA5ODEzOTYxN30.1OekgKjJONMYsv0-k_tIkwlHsTczfNPhcT4u4b9sLEw';
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+let USER = null, CROLE = null, ACTIVE_CONV = null, MSG_CHANNEL = null, NM_SELECTED = [];
+
+function loadMsg(m){ document.getElementById('load-msg').textContent = m; }
+function showLoadError(msg){
+  document.getElementById('loading').innerHTML=`<p style="color:#e8795a;font-size:13px;max-width:340px;text-align:center;line-height:1.7;padding:0 20px">${msg}</p><a href="index.html" style="color:rgba(255,255,255,.5);font-size:12px;margin-top:16px;display:block;text-align:center">← Back to Sign In</a>`;
+}
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initials(name){ if(!name) return '?'; const p=name.trim().split(/\s+/); return ((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase()||name[0].toUpperCase(); }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtDateTime(d){ return new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+window.closeModal = function(id){ document.getElementById(id).classList.remove('open'); };
+window.openModal = function(id){ document.getElementById(id).classList.add('open'); };
+window.signOut = async function(){ await sb.auth.signOut(); window.location.href='index.html'; };
+
+try {
+  loadMsg('Checking session…');
+  const { data: sd, error: se } = await sb.auth.getSession();
+  if (se) throw se;
+  if (!sd?.session) { window.location.href='index.html'; throw new Error('redirect'); }
+
+  loadMsg('Loading profile…');
+  const uid = sd.session.user.id;
+  let { data: profile } = await sb.from('profiles').select('*').eq('id', uid).single();
+  if (!profile || profile.connect_role === 'none') { window.location.href='index.html'; throw new Error('redirect'); }
+
+  USER = profile; CROLE = profile.connect_role;
+  document.getElementById('tName').textContent = profile.full_name || profile.email;
+  document.getElementById('tEmail').textContent = profile.email;
+  const badge = document.getElementById('roleBadge');
+  badge.textContent = CROLE.charAt(0).toUpperCase()+CROLE.slice(1);
+  badge.className = 'rb '+CROLE;
+  if (CROLE === 'admin') document.getElementById('adminNavSect').style.display = '';
+
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').classList.add('ready');
+
+  nav(location.hash.replace('#','') || 'home');
+} catch(e) {
+  if (e.message !== 'redirect') { console.error(e); showLoadError('Something went wrong loading PII Connect. Please try signing in again.'); }
+}
+
+// ── Nav / routing ──────────────────────────────────────────────
+window.nav = function(view){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  location.hash = view;
+  if (MSG_CHANNEL) { sb.removeChannel(MSG_CHANNEL); MSG_CHANNEL=null; }
+  const render = { home:renderHome, directory:renderDirectory, messages:renderMessages, forums:renderForums, jobs:renderJobs, events:renderEvents, announcements:renderAnnouncements, admin:renderAdmin }[view] || renderHome;
+  render();
+};
+
+// ── HOME ──────────────────────────────────────────────────────
+async function renderHome(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Welcome back, ${esc((USER.full_name||'').split(' ')[0]||'')}</h1><p>What's happening across the PII alumni network</p></div></div>
+    <div id="home-events" class="tw"></div>
+    <div id="home-feed"></div>`;
+
+  const { data: events } = await sb.from('connect_events').select('*').gte('start_at', new Date().toISOString()).order('start_at').limit(3);
+  const evEl = document.getElementById('home-events');
+  if (events && events.length){
+    evEl.innerHTML = `<div style="padding:16px 20px;border-bottom:1px solid var(--rule);font-weight:600;font-size:13px">Upcoming Events</div>` +
+      events.map(e=>`<div style="padding:14px 20px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
+        <div><strong>${esc(e.title)}</strong><div style="font-size:11px;color:rgba(14,14,12,.4);margin-top:3px">${fmtDateTime(e.start_at)}${e.location?' · '+esc(e.location):''}</div></div>
+        <button class="btn btn-outline btn-sm" onclick="nav('events')">View</button></div>`).join('');
+  } else { evEl.remove(); }
+
+  const { data: anns } = await sb.from('connect_announcements').select('*,profiles(full_name)').order('pinned',{ascending:false}).order('created_at',{ascending:false}).limit(5);
+  const feedEl = document.getElementById('home-feed');
+  if (anns && anns.length){
+    feedEl.innerHTML = anns.map(a=>`<div class="ann-card ${a.pinned?'pinned':''}">
+      <div class="ann-title">${a.pinned?'📌 ':''}${esc(a.title)}</div>
+      <div class="ann-meta">${esc(a.profiles?.full_name||'PII')} · ${fmtDate(a.created_at)}</div>
+      <div class="ann-body">${esc(a.body)}</div></div>`).join('');
+  } else {
+    feedEl.innerHTML = `<div class="empty"><div class="ei">◇</div><div class="et">No announcements yet.</div></div>`;
+  }
+}
+
+// ── DIRECTORY ─────────────────────────────────────────────────
+let DIR_CACHE = null;
+async function renderDirectory(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Alumni Directory</h1><p>Browse and connect with fellow PII alumni</p></div></div>
+    <div class="searchbar"><input id="dir-search" placeholder="Search by name, company, program…" oninput="filterDirectory()"/></div>
+    <div class="dgrid" id="dir-grid"></div>`;
+
+  const { data } = await sb.from('connect_alumni_profiles').select('*,profiles(id,full_name,email)').neq('visibility','private');
+  DIR_CACHE = (data||[]).filter(d=>d.profiles);
+  drawDirectory(DIR_CACHE);
+}
+function drawDirectory(list){
+  const grid = document.getElementById('dir-grid');
+  if (!list.length){ grid.innerHTML = `<div class="empty"><div class="ei">☰</div><div class="et">No alumni found.</div></div>`; return; }
+  grid.innerHTML = list.map(a=>`<div class="acard" onclick="viewProfile('${a.user_id}')">
+    <div class="acard-top"><div class="avatar">${initials(a.profiles.full_name)}</div>
+      <div><div class="acard-name">${esc(a.profiles.full_name)}</div><div class="acard-head">${esc(a.headline||a.job_title||'')}</div></div></div>
+    <div class="acard-meta">${a.company?'🏢 '+esc(a.company):''}${a.location?'<br>📍 '+esc(a.location):''}</div>
+    ${a.grad_program?`<div class="tag">${esc(a.grad_program)}</div>`:''}</div>`).join('');
+}
+window.filterDirectory = function(){
+  const q = document.getElementById('dir-search').value.toLowerCase();
+  drawDirectory(DIR_CACHE.filter(a => (a.profiles.full_name||'').toLowerCase().includes(q) || (a.company||'').toLowerCase().includes(q) || (a.grad_program||'').toLowerCase().includes(q)));
+};
+window.viewProfile = async function(userId){
+  const { data: a } = await sb.from('connect_alumni_profiles').select('*,profiles(id,full_name,email)').eq('user_id',userId).single();
+  if (!a) return;
+  const body = document.getElementById('m-profile-body');
+  const isMe = userId === USER.id;
+  body.innerHTML = `
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px">
+      <div class="avatar lg">${initials(a.profiles.full_name)}</div>
+      <div><div style="font-family:var(--serif);font-size:20px;font-weight:700">${esc(a.profiles.full_name)}</div>
+      <div style="font-size:13px;color:rgba(14,14,12,.5)">${esc(a.headline||a.job_title||'')}</div></div>
+    </div>
+    ${a.bio?`<p style="font-size:13px;line-height:1.7;color:rgba(14,14,12,.7);margin-bottom:16px">${esc(a.bio)}</p>`:''}
+    <div style="font-size:12px;color:rgba(14,14,12,.55);line-height:2">
+      ${a.company?`🏢 ${esc(a.job_title||'')} at ${esc(a.company)}<br>`:''}
+      ${a.location?`📍 ${esc(a.location)}<br>`:''}
+      ${a.grad_program?`🎓 ${esc(a.grad_program)}<br>`:''}
+      ${a.linkedin_url?`🔗 <a href="${esc(a.linkedin_url)}" target="_blank" style="color:var(--accent)">LinkedIn</a><br>`:''}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('m-profile')">Close</button>
+      ${isMe?`<button class="btn btn-primary" onclick="closeModal('m-profile');nav('editme')" disabled>This is you</button>`:`<button class="btn btn-primary" onclick="closeModal('m-profile');messageUser('${userId}','${esc(a.profiles.full_name)}')">Message</button>`}
+    </div>`;
+  openModal('m-profile');
+};
+
+// ── MESSAGES ──────────────────────────────────────────────────
+async function renderMessages(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Messages</h1><p>Direct and group conversations with alumni</p></div>
+    <div class="ph-act"><button class="btn btn-primary" onclick="NM_SELECTED_RESET();openModal('m-newmsg')">+ New Message</button></div></div>
+    <div class="msg-layout">
+      <div class="conv-list" id="conv-list"><div class="empty"><div class="et">Loading…</div></div></div>
+      <div class="thread-pane" id="thread-pane">
+        <div class="empty" style="margin:auto"><div class="ei">✉</div><div class="et">Select a conversation</div></div>
+      </div>
+    </div>`;
+  await loadConversations();
+}
+async function loadConversations(){
+  const { data: mems } = await sb.from('connect_conversation_members').select('conversation_id').eq('user_id', USER.id);
+  const convIds = (mems||[]).map(m=>m.conversation_id);
+  const list = document.getElementById('conv-list');
+  if (!convIds.length){ list.innerHTML = `<div class="empty"><div class="et">No conversations yet.</div></div>`; return; }
+
+  const { data: convs } = await sb.from('connect_conversations').select('*').in('id', convIds).order('created_at',{ascending:false});
+  const items = [];
+  for (const c of convs){
+    const { data: members } = await sb.from('connect_conversation_members').select('profiles(id,full_name)').eq('conversation_id', c.id);
+    const others = (members||[]).map(m=>m.profiles).filter(p=>p && p.id!==USER.id);
+    const title = c.title || others.map(o=>o.full_name).join(', ') || 'Conversation';
+    const { data: lastMsg } = await sb.from('connect_messages').select('body,created_at').eq('conversation_id', c.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    items.push({ id:c.id, title, preview: lastMsg?.body || 'No messages yet' });
+  }
+  list.innerHTML = items.map(i=>`<div class="conv-item" data-id="${i.id}" onclick="openConversation('${i.id}','${esc(i.title)}')">
+    <div class="avatar sm">${initials(i.title)}</div>
+    <div><div class="conv-title">${esc(i.title)}</div><div class="conv-prev">${esc(i.preview)}</div></div></div>`).join('');
+}
+window.openConversation = async function(convId, title){
+  ACTIVE_CONV = convId;
+  document.querySelectorAll('.conv-item').forEach(el=>el.classList.toggle('active', el.dataset.id===convId));
+  const pane = document.getElementById('thread-pane');
+  pane.innerHTML = `<div class="thread-head">${esc(title)}</div>
+    <div class="thread-body" id="thread-body"></div>
+    <div class="thread-input"><input id="thread-input" placeholder="Write a message…" onkeydown="if(event.key==='Enter')sendMessage()"/><button class="btn btn-primary btn-sm" onclick="sendMessage()">Send</button></div>`;
+  await loadMessages(convId);
+
+  if (MSG_CHANNEL) sb.removeChannel(MSG_CHANNEL);
+  MSG_CHANNEL = sb.channel('conv-'+convId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'connect_messages', filter:`conversation_id=eq.${convId}` }, payload => {
+      if (payload.new.sender_id !== USER.id) appendBubble(payload.new);
+    }).subscribe();
+};
+async function loadMessages(convId){
+  const { data } = await sb.from('connect_messages').select('*').eq('conversation_id', convId).order('created_at');
+  const body = document.getElementById('thread-body');
+  body.innerHTML = '';
+  (data||[]).forEach(appendBubble);
+  body.scrollTop = body.scrollHeight;
+}
+function appendBubble(m){
+  const body = document.getElementById('thread-body');
+  if (!body) return;
+  const mine = m.sender_id === USER.id;
+  const d = document.createElement('div');
+  d.className = 'bubble ' + (mine?'mine':'theirs');
+  d.innerHTML = `${esc(m.body)}<div class="bubble-meta">${fmtDateTime(m.created_at)}</div>`;
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+}
+window.sendMessage = async function(){
+  const input = document.getElementById('thread-input');
+  const body = input.value.trim();
+  if (!body || !ACTIVE_CONV) return;
+  input.value = '';
+  const { data, error } = await sb.from('connect_messages').insert({ conversation_id: ACTIVE_CONV, sender_id: USER.id, body }).select().single();
+  if (error){ toast('Failed to send'); return; }
+  appendBubble(data);
+};
+window.messageUser = async function(userId, name){
+  const { data: mems } = await sb.from('connect_conversation_members').select('conversation_id').eq('user_id', USER.id);
+  const myConvIds = (mems||[]).map(m=>m.conversation_id);
+  let existing = null;
+  if (myConvIds.length){
+    const { data: theirMems } = await sb.from('connect_conversation_members').select('conversation_id').eq('user_id', userId).in('conversation_id', myConvIds);
+    for (const tm of (theirMems||[])){
+      const { count } = await sb.from('connect_conversation_members').select('*',{count:'exact',head:true}).eq('conversation_id', tm.conversation_id);
+      if (count === 2) { existing = tm.conversation_id; break; }
+    }
+  }
+  let convId = existing;
+  if (!convId){
+    const { data: conv } = await sb.from('connect_conversations').insert({ created_by: USER.id, is_group:false }).select().single();
+    convId = conv.id;
+    await sb.from('connect_conversation_members').insert([{conversation_id:convId,user_id:USER.id},{conversation_id:convId,user_id:userId}]);
+  }
+  nav('messages');
+  setTimeout(()=>openConversation(convId, name), 300);
+};
+window.NM_SELECTED_RESET = function(){ NM_SELECTED = []; document.getElementById('nm-selected').innerHTML=''; document.getElementById('nm-search').value=''; document.getElementById('nm-results').innerHTML=''; };
+window.searchRecipients = async function(){
+  const q = document.getElementById('nm-search').value.trim();
+  if (!q){ document.getElementById('nm-results').innerHTML=''; return; }
+  const { data } = await sb.from('connect_alumni_profiles').select('user_id,profiles(id,full_name)').neq('user_id', USER.id);
+  const results = (data||[]).filter(d=>d.profiles && d.profiles.full_name?.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+  document.getElementById('nm-results').innerHTML = results.map(r=>`<div class="chk-row" style="cursor:pointer" onclick='NM_ADD("${r.user_id}","${esc(r.profiles.full_name)}")'>${esc(r.profiles.full_name)}</div>`).join('') || '<div style="font-size:12px;color:rgba(14,14,12,.4);padding:6px 0">No matches</div>';
+};
+window.NM_ADD = function(id,name){
+  if (NM_SELECTED.find(s=>s.id===id)) return;
+  NM_SELECTED.push({id,name});
+  document.getElementById('nm-selected').innerHTML = NM_SELECTED.map(s=>`<span class="tag">${esc(s.name)}</span>`).join('');
+  document.getElementById('nm-search').value=''; document.getElementById('nm-results').innerHTML='';
+};
+window.startConversation = async function(){
+  if (!NM_SELECTED.length){ toast('Select at least one recipient'); return; }
+  const isGroup = NM_SELECTED.length > 1;
+  const { data: conv } = await sb.from('connect_conversations').insert({ created_by:USER.id, is_group:isGroup, title: isGroup ? NM_SELECTED.map(s=>s.name).join(', ') : null }).select().single();
+  const members = [{conversation_id:conv.id,user_id:USER.id}, ...NM_SELECTED.map(s=>({conversation_id:conv.id,user_id:s.id}))];
+  await sb.from('connect_conversation_members').insert(members);
+  closeModal('m-newmsg');
+  await loadConversations();
+  openConversation(conv.id, conv.title || NM_SELECTED[0].name);
+};
+
+// ── FORUMS ────────────────────────────────────────────────────
+async function renderForums(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Forums</h1><p>Discussion boards for the alumni community</p></div></div>
+    <div class="cat-list" id="cat-list"></div>`;
+  const { data: cats } = await sb.from('connect_forum_categories').select('*').order('sort_order');
+  const list = document.getElementById('cat-list');
+  const withCounts = await Promise.all((cats||[]).map(async c => {
+    const { count } = await sb.from('connect_forum_threads').select('*',{count:'exact',head:true}).eq('category_id', c.id);
+    return {...c, count};
+  }));
+  list.innerHTML = withCounts.map(c=>`<div class="cat-card" onclick="renderThreadList('${c.id}','${esc(c.name)}')">
+    <div><div class="cat-name">${esc(c.name)}</div><div class="cat-desc">${esc(c.description||'')}</div></div>
+    <div class="cat-count">${c.count} thread${c.count===1?'':'s'} →</div></div>`).join('') || `<div class="empty"><div class="et">No categories yet.</div></div>`;
+}
+window.renderThreadList = async function(catId, catName){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>${esc(catName)}</h1><p><a href="#" onclick="nav('forums');return false" style="color:var(--accent)">← Forums</a></p></div>
+    <div class="ph-act"><button class="btn btn-primary" onclick="openThreadModal('${catId}')">+ New Thread</button></div></div>
+    <div id="thread-list"></div>`;
+  const { data: threads } = await sb.from('connect_forum_threads').select('*,profiles(full_name)').eq('category_id', catId).order('pinned',{ascending:false}).order('created_at',{ascending:false});
+  const withCounts = await Promise.all((threads||[]).map(async t=>{
+    const { count } = await sb.from('connect_forum_replies').select('*',{count:'exact',head:true}).eq('thread_id', t.id);
+    return {...t, count};
+  }));
+  document.getElementById('thread-list').innerHTML = withCounts.map(t=>`<div class="thread-row" onclick="viewThread('${t.id}')">
+    <div class="thread-row-title">${t.pinned?'📌 ':''}${esc(t.title)}</div>
+    <div class="thread-row-meta">${esc(t.profiles?.full_name||'—')} · ${fmtDate(t.created_at)} · ${t.count} repl${t.count===1?'y':'ies'}</div></div>`).join('') || `<div class="empty"><div class="et">No threads yet — start one!</div></div>`;
+  window._currentCat = catId;
+};
+window.openThreadModal = function(catId){ document.getElementById('m-thread').dataset.cat = catId; openModal('m-thread'); };
+window.createThread = async function(){
+  const catId = document.getElementById('m-thread').dataset.cat;
+  const title = document.getElementById('th-title').value.trim();
+  const body = document.getElementById('th-body').value.trim();
+  if (!title){ toast('Title required'); return; }
+  const { error } = await sb.from('connect_forum_threads').insert({ category_id: catId, author_id: USER.id, title, body });
+  if (error){ toast('Failed to post'); return; }
+  document.getElementById('th-title').value=''; document.getElementById('th-body').value='';
+  closeModal('m-thread');
+  toast('Thread posted');
+  renderThreadList(catId, document.querySelector('.mi h1')?.textContent || '');
+};
+window.viewThread = async function(threadId){
+  const { data: t } = await sb.from('connect_forum_threads').select('*,profiles(full_name)').eq('id', threadId).single();
+  const { data: replies } = await sb.from('connect_forum_replies').select('*,profiles(full_name)').eq('thread_id', threadId).order('created_at');
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>${esc(t.title)}</h1><p><a href="#" onclick="renderThreadList('${t.category_id}','');return false" style="color:var(--accent)">← Back</a></p></div></div>
+    <div class="cc"><div class="cc-meta">${esc(t.profiles?.full_name||'—')} · ${fmtDate(t.created_at)}</div><div class="cc-desc" style="white-space:pre-wrap">${esc(t.body||'')}</div></div>
+    <div id="replies">${(replies||[]).map(r=>`<div class="reply"><div class="reply-meta">${esc(r.profiles?.full_name||'—')} · ${fmtDateTime(r.created_at)}</div><div class="reply-body">${esc(r.body)}</div></div>`).join('')}</div>
+    <div class="fg" style="margin-top:20px"><div class="fl"><label>Reply</label><textarea id="reply-body" rows="3"></textarea></div>
+    <button class="btn btn-primary" style="width:fit-content" onclick="postReply('${threadId}')">Post Reply</button></div>`;
+};
+window.postReply = async function(threadId){
+  const body = document.getElementById('reply-body').value.trim();
+  if (!body) return;
+  const { error } = await sb.from('connect_forum_replies').insert({ thread_id: threadId, author_id: USER.id, body });
+  if (error){ toast('Failed to reply'); return; }
+  viewThread(threadId);
+};
+
+// ── JOBS ──────────────────────────────────────────────────────
+async function renderJobs(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Jobs Board</h1><p>Opportunities shared by PII and the alumni network</p></div>
+    <div class="ph-act">${CROLE==='admin'?`<button class="btn btn-primary" onclick="openModal('m-job')">+ Post Job</button>`:''}</div></div>
+    <div id="jobs-list"></div>`;
+  const { data } = await sb.from('connect_jobs').select('*,profiles(full_name)').eq('status','active').order('created_at',{ascending:false});
+  document.getElementById('jobs-list').innerHTML = (data||[]).map(j=>`<div class="jcard">
+    <div class="jcard-top"><div><div class="jcard-title">${esc(j.title)}</div><div class="jcard-co">${esc(j.company)}</div></div>
+    ${CROLE==='admin'?`<button class="btn btn-outline btn-sm" onclick="closeJob('${j.id}')">Close</button>`:''}</div>
+    <div class="jcard-meta">${esc(j.location||'')}${j.remote?' · Remote OK':''} · ${j.job_type?j.job_type.replace('_',' '):''} · Posted ${fmtDate(j.created_at)}</div>
+    <div class="jcard-desc">${esc(j.description||'')}</div>
+    <div style="margin-top:12px">${j.apply_url?`<a class="btn btn-primary btn-sm" href="${esc(j.apply_url)}" target="_blank">Apply →</a>`:''}${j.apply_email?` <a class="btn btn-outline btn-sm" href="mailto:${esc(j.apply_email)}">Email to Apply</a>`:''}</div>
+    </div>`).join('') || `<div class="empty"><div class="ei">▣</div><div class="et">No open roles right now.</div></div>`;
+}
+window.saveJob = async function(){
+  const title = document.getElementById('job-title').value.trim();
+  const company = document.getElementById('job-company').value.trim();
+  if (!title || !company){ toast('Title and company required'); return; }
+  const payload = {
+    title, company,
+    location: document.getElementById('job-location').value.trim(),
+    job_type: document.getElementById('job-type').value,
+    remote: document.getElementById('job-remote').checked,
+    description: document.getElementById('job-desc').value.trim(),
+    apply_url: document.getElementById('job-url').value.trim() || null,
+    apply_email: document.getElementById('job-email').value.trim() || null,
+    posted_by: USER.id
+  };
+  const { error } = await sb.from('connect_jobs').insert(payload);
+  if (error){ toast('Failed to post job'); return; }
+  closeModal('m-job'); toast('Job posted'); renderJobs();
+};
+window.closeJob = async function(id){
+  await sb.from('connect_jobs').update({ status:'closed' }).eq('id', id);
+  toast('Job closed'); renderJobs();
+};
+
+// ── EVENTS ────────────────────────────────────────────────────
+async function renderEvents(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Events</h1><p>Meetups, webinars, and alumni gatherings</p></div>
+    <div class="ph-act">${CROLE==='admin'?`<button class="btn btn-primary" onclick="openModal('m-event')">+ New Event</button>`:''}</div></div>
+    <div id="events-list"></div>`;
+  const { data } = await sb.from('connect_events').select('*').order('start_at',{ascending:true});
+  const rows = await Promise.all((data||[]).map(async e=>{
+    const { data: mine } = await sb.from('connect_event_rsvps').select('status').eq('event_id', e.id).eq('user_id', USER.id).maybeSingle();
+    const { count } = await sb.from('connect_event_rsvps').select('*',{count:'exact',head:true}).eq('event_id', e.id).eq('status','going');
+    return {...e, myStatus: mine?.status, going: count};
+  }));
+  const d = new Date(); const mon = m => m.toLocaleDateString('en-US',{month:'short'}).toUpperCase();
+  document.getElementById('events-list').innerHTML = rows.map(e=>{
+    const dt = new Date(e.start_at);
+    return `<div class="ecard"><div class="edate"><div class="mon">${mon(dt)}</div><div class="day">${dt.getDate()}</div></div>
+    <div class="ebody"><div class="etitle">${esc(e.title)}</div>
+    <div class="emeta">${fmtDateTime(e.start_at)} · ${e.is_virtual?'Virtual':esc(e.location||'')} · ${e.going} going</div>
+    <div class="edesc">${esc(e.description||'')}</div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn btn-sm ${e.myStatus==='going'?'btn-primary':'btn-outline'}" onclick="rsvp('${e.id}','going')">Going</button>
+      <button class="btn btn-sm ${e.myStatus==='interested'?'btn-primary':'btn-outline'}" onclick="rsvp('${e.id}','interested')">Interested</button>
+      ${e.is_virtual && e.virtual_link ? `<a class="btn btn-outline btn-sm" href="${esc(e.virtual_link)}" target="_blank">Join Link</a>` : ''}
+    </div></div></div>`;
+  }).join('') || `<div class="empty"><div class="ei">◷</div><div class="et">No events scheduled.</div></div>`;
+}
+window.rsvp = async function(eventId, status){
+  await sb.from('connect_event_rsvps').upsert({ event_id: eventId, user_id: USER.id, status });
+  renderEvents();
+};
+window.saveEvent = async function(){
+  const title = document.getElementById('ev-title').value.trim();
+  const start = document.getElementById('ev-start').value;
+  if (!title || !start){ toast('Title and start time required'); return; }
+  const isVirtual = document.getElementById('ev-virtual').checked;
+  const payload = {
+    title, start_at: new Date(start).toISOString(),
+    end_at: document.getElementById('ev-end').value ? new Date(document.getElementById('ev-end').value).toISOString() : null,
+    is_virtual: isVirtual,
+    location: isVirtual ? null : document.getElementById('ev-location').value.trim(),
+    virtual_link: isVirtual ? document.getElementById('ev-link').value.trim() : null,
+    description: document.getElementById('ev-desc').value.trim(),
+    created_by: USER.id
+  };
+  const { error } = await sb.from('connect_events').insert(payload);
+  if (error){ toast('Failed to create event'); return; }
+  closeModal('m-event'); toast('Event created'); renderEvents();
+};
+
+// ── ANNOUNCEMENTS ─────────────────────────────────────────────
+async function renderAnnouncements(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Announcements</h1><p>Updates from The Public Innovation Institute</p></div>
+    <div class="ph-act">${CROLE==='admin'?`<button class="btn btn-primary" onclick="openModal('m-ann')">+ New Announcement</button>`:''}</div></div>
+    <div id="ann-list"></div>`;
+  const { data } = await sb.from('connect_announcements').select('*,profiles(full_name)').order('pinned',{ascending:false}).order('created_at',{ascending:false});
+  document.getElementById('ann-list').innerHTML = (data||[]).map(a=>`<div class="ann-card ${a.pinned?'pinned':''}">
+    <div class="ann-title">${a.pinned?'📌 ':''}${esc(a.title)}</div>
+    <div class="ann-meta">${esc(a.profiles?.full_name||'PII')} · ${fmtDate(a.created_at)}</div>
+    <div class="ann-body">${esc(a.body)}</div></div>`).join('') || `<div class="empty"><div class="ei">◆</div><div class="et">No announcements yet.</div></div>`;
+}
+window.saveAnnouncement = async function(){
+  const title = document.getElementById('ann-title').value.trim();
+  const body = document.getElementById('ann-body').value.trim();
+  if (!title || !body){ toast('Title and message required'); return; }
+  const { error } = await sb.from('connect_announcements').insert({ title, body, pinned: document.getElementById('ann-pin').checked, created_by: USER.id });
+  if (error){ toast('Failed to post'); return; }
+  document.getElementById('ann-title').value=''; document.getElementById('ann-body').value=''; document.getElementById('ann-pin').checked=false;
+  closeModal('m-ann'); toast('Posted to all alumni'); renderAnnouncements();
+};
+
+// ── ADMIN ─────────────────────────────────────────────────────
+async function renderAdmin(){
+  if (CROLE !== 'admin'){ nav('home'); return; }
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Manage Alumni</h1><p>Add alumni manually or import completed PII Learn cohorts</p></div>
+    <div class="ph-act"><button class="btn btn-outline" onclick="syncEligible()">↻ Sync from PII Learn</button><button class="btn btn-primary" onclick="openModal('m-addalum')">+ Add Alumni</button></div></div>
+    <div class="sg" id="admin-stats"></div>
+    <div class="admin-tabs">
+      <div class="admin-tab active" data-t="invited" onclick="adminTab('invited')">Invited / Joined</div>
+      <div class="admin-tab" data-t="eligible" onclick="adminTab('eligible')">Eligible to Import</div>
+    </div>
+    <div id="admin-body"></div>`;
+  await loadAdminStats();
+  adminTab('invited');
+}
+async function loadAdminStats(){
+  const [{count:total},{count:joined},{count:invited}] = await Promise.all([
+    sb.from('connect_invited_alumni').select('*',{count:'exact',head:true}),
+    sb.from('connect_invited_alumni').select('*',{count:'exact',head:true}).eq('status','joined'),
+    sb.from('connect_invited_alumni').select('*',{count:'exact',head:true}).eq('status','invited'),
+  ]);
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="sc"><div class="sl">Total on List</div><div class="sv">${total||0}</div></div>
+    <div class="sc"><div class="sl">Joined</div><div class="sv ac">${joined||0}</div></div>
+    <div class="sc"><div class="sl">Pending Invite</div><div class="sv">${invited||0}</div></div>`;
+}
+window.adminTab = async function(t){
+  document.querySelectorAll('.admin-tab').forEach(el=>el.classList.toggle('active', el.dataset.t===t));
+  const body = document.getElementById('admin-body');
+  if (t === 'invited'){
+    const { data } = await sb.from('connect_invited_alumni').select('*').order('created_at',{ascending:false});
+    body.innerHTML = `<div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Program</th><th>Source</th><th>Status</th></tr></thead><tbody>
+      ${(data||[]).map(i=>`<tr class="dr"><td><strong>${esc(i.full_name||'—')}</strong></td><td>${esc(i.email)}</td><td>${esc(i.program_name||'—')}</td>
+      <td><span class="pill ${i.source==='auto_import'?'pending':'alumni'}">${i.source==='auto_import'?'Auto-Import':'Manual'}</span></td>
+      <td><span class="pill ${i.status==='joined'?'open':'pending'}">${i.status}</span></td></tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:rgba(14,14,12,.4)">Nobody added yet.</td></tr>`}
+      </tbody></table></div>`;
+  } else {
+    const { data } = await sb.from('connect_eligible_alumni').select('*');
+    if (!data || !data.length){ body.innerHTML = `<div class="empty"><div class="et">No newly-eligible completed students found in PII Learn.</div></div>`; return; }
+    body.innerHTML = `<div class="tw"><table><thead><tr><th><input type="checkbox" onclick="toggleAllEligible(this)"/></th><th>Name</th><th>Email</th><th>Program</th><th>Completed</th></tr></thead><tbody>
+      ${data.map(e=>`<tr class="dr"><td><input type="checkbox" class="elig-chk" value="${e.user_id}" data-email="${esc(e.email)}" data-name="${esc(e.full_name||'')}" data-program="${esc(e.program_name||'')}"/></td>
+      <td><strong>${esc(e.full_name||'—')}</strong></td><td>${esc(e.email)}</td><td>${esc(e.program_name||'—')}</td><td>${e.completed_at?fmtDate(e.completed_at):'—'}</td></tr>`).join('')}
+      </tbody></table></div>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="importSelected()">Import Selected</button>`;
+  }
+};
+window.toggleAllEligible = function(cb){ document.querySelectorAll('.elig-chk').forEach(el=>el.checked=cb.checked); };
+window.syncEligible = function(){ adminTab('eligible'); toast('Showing latest eligible alumni from PII Learn'); };
+window.importSelected = async function(){
+  const checked = [...document.querySelectorAll('.elig-chk:checked')];
+  if (!checked.length){ toast('Select at least one'); return; }
+  const rows = checked.map(c => ({ email: c.dataset.email, full_name: c.dataset.name, program_name: c.dataset.program, source:'auto_import', invited_by: USER.id }));
+  const { error } = await sb.from('connect_invited_alumni').upsert(rows, { onConflict:'email' });
+  if (error){ toast('Import failed'); return; }
+  // Also grant immediately since they already have PII Learn accounts
+  for (const c of checked){
+    await sb.from('profiles').update({ connect_role:'alumni', connect_joined_at: new Date().toISOString() }).eq('id', c.value);
+    await sb.from('connect_alumni_profiles').upsert({ user_id: c.value, grad_program: c.dataset.program || null });
+    await sb.from('connect_invited_alumni').update({ status:'joined', joined_at: new Date().toISOString() }).eq('email', c.dataset.email);
+  }
+  toast(`Imported ${checked.length} alumni`);
+  renderAdmin();
+};
+window.addAlumniManual = async function(){
+  const email = document.getElementById('aa-email').value.trim();
+  const name = document.getElementById('aa-name').value.trim();
+  const program = document.getElementById('aa-program').value.trim();
+  if (!email){ toast('Email required'); return; }
+  const { error } = await sb.from('connect_invited_alumni').upsert({ email, full_name:name, program_name:program, source:'manual', invited_by: USER.id, status:'invited' }, { onConflict:'email' });
+  if (error){ toast('Failed to add'); return; }
+  // If they already have a PII Learn profile, grant access now
+  const { data: existing } = await sb.from('profiles').select('id').ilike('email', email).maybeSingle();
+  if (existing){
+    await sb.from('profiles').update({ connect_role:'alumni', connect_joined_at: new Date().toISOString() }).eq('id', existing.id);
+    await sb.from('connect_alumni_profiles').upsert({ user_id: existing.id, grad_program: program || null });
+    await sb.from('connect_invited_alumni').update({ status:'joined', joined_at: new Date().toISOString() }).eq('email', email);
+  }
+  document.getElementById('aa-email').value=''; document.getElementById('aa-name').value=''; document.getElementById('aa-program').value='';
+  closeModal('m-addalum'); toast('Alumni added'); renderAdmin();
+};
+
+window.renderHome = renderHome;
+</script>
+</body>
+</html>
