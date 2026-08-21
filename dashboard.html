@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PII Connect — Alumni Network</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap"/>
+<style>
+/* ══ app component styles (directory, jobs, events, forums, modals) ══ */
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#c8401e;--ink:#0e0e0c;--paper:#faf9f5;--warm:#f3f0e8;--rule:rgba(14,14,12,0.12);
+  --serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+  --ok:#1a6b3a;--ok-bg:#edf7f1;--err:#9b2020;--err-bg:#fdf0f0;--warn:#7a5c12;--warn-bg:#fdf8ec;
+  --sidebar:248px;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;overflow:hidden}
+#loading{position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.load-ring{width:38px;height:38px;border:2px solid rgba(200,64,30,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.load-txt{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.35)}
+#app{display:none;height:100vh;flex-direction:column}
+#app.ready{display:flex}
+.topbar{height:64px;background:var(--ink);display:flex;align-items:center;padding:0 28px;gap:14px;flex-shrink:0;z-index:200}
+.topbar-brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.t-ring{width:36px;height:36px;border:1.5px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.t-ring span{font-family:var(--serif);font-size:11px;font-weight:700;color:var(--accent)}
+.t-wm{font-family:var(--serif);font-size:15px;font-weight:700;color:#fff}
+.t-sub{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:1px}
+.t-div{width:1px;height:22px;background:rgba(255,255,255,.1)}
+.rb{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:3px 10px;border-radius:20px}
+.rb.admin{background:rgba(200,64,30,.25);color:#e8795a}
+.rb.alumni{background:rgba(255,255,255,.1);color:rgba(255,255,255,.55)}
+.t-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.t-name{font-size:13px;color:#fff;font-weight:500}
+.t-email{font-size:11px;color:rgba(255,255,255,.35)}
+.btn-ghost{background:none;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:2px;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.btn-ghost:hover{background:rgba(255,255,255,.08);color:#fff}
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:var(--sidebar);background:#fff;border-right:1px solid var(--rule);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.sb-sect{padding:18px 0 4px}
+.sb-lbl{font-size:9px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:rgba(14,14,12,.3);padding:0 18px;margin-bottom:4px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 18px;width:100%;background:none;border:none;border-left:3px solid transparent;font-family:var(--sans);font-size:13px;color:rgba(14,14,12,.5);cursor:pointer;transition:all .15s;text-align:left;position:relative}
+.nav-btn:hover{background:var(--warm);color:var(--ink)}
+.nav-btn.active{color:var(--accent);border-left-color:var(--accent);background:rgba(200,64,30,.05);font-weight:600}
+.ni{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.nav-dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.main{flex:1;overflow-y:auto;background:var(--paper)}
+.mi{padding:36px 44px;max-width:1300px}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--rule)}
+.ph h1{font-family:var(--serif);font-size:26px;font-weight:700}
+.ph p{font-size:12px;color:rgba(14,14,12,.4);margin-top:4px}
+.ph-act{display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.btn{font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:2px;border:none;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.88}
+.btn-outline{background:none;border:1.5px solid var(--rule);color:var(--ink)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--err-bg);color:var(--err);border:1px solid rgba(155,32,32,.2)}.btn-danger:hover{background:#fce0e0}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.ssm{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:26px}
+.sc{background:#fff;border:1px solid var(--rule);padding:22px;border-radius:2px}
+.sl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(14,14,12,.38);margin-bottom:8px}
+.sv{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1}
+.sv.ac{color:var(--accent)}
+.ss{font-size:12px;color:rgba(14,14,12,.38);margin-top:6px}
+.tw{background:#fff;border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 16px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:rgba(14,14,12,.38);border-bottom:2px solid var(--rule);white-space:nowrap;background:var(--warm)}
+td{padding:11px 16px;border-bottom:1px solid var(--rule);color:rgba(14,14,12,.72);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.dr:hover td{background:rgba(243,240,232,.5)}
+td strong{color:var(--ink);font-weight:600}
+.pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:20px}
+.pill.open{background:var(--ok-bg);color:var(--ok)}
+.pill.closed{background:var(--err-bg);color:var(--err)}
+.pill.pending{background:var(--warn-bg);color:var(--warn)}
+.pill.admin{background:rgba(200,64,30,.1);color:var(--accent)}
+.pill.alumni{background:var(--warm);color:rgba(14,14,12,.45);border:1px solid var(--rule)}
+.cc{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:18px 22px;margin-bottom:10px}
+.cc-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.cc-meta{font-size:11px;color:rgba(14,14,12,.38);margin-bottom:5px}
+.cc-desc{font-size:13px;color:rgba(14,14,12,.6);line-height:1.6}
+.mo{position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.mo.open{display:flex}
+.modal{background:var(--paper);border-radius:2px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:36px 40px}
+.modal-title{font-family:var(--serif);font-size:22px;font-weight:700;margin-bottom:22px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--rule)}
+.fg{display:grid;gap:15px}
+.fg2{grid-template-columns:1fr 1fr}
+.fl label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:rgba(14,14,12,.45);margin-bottom:5px}
+.fl input,.fl select,.fl textarea{width:100%;padding:10px 12px;border:1.5px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--warm);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:var(--accent)}
+.fl textarea{resize:vertical;min-height:90px}
+#toast{position:fixed;bottom:22px;right:22px;z-index:1000;background:var(--ink);color:#fff;padding:11px 18px;border-radius:2px;font-size:13px;border-left:3px solid var(--accent);transform:translateY(16px);opacity:0;transition:all .3s;pointer-events:none;max-width:340px}
+#toast.show{transform:translateY(0);opacity:1}
+.empty{text-align:center;padding:48px 24px;color:rgba(14,14,12,.3)}
+.ei{font-size:26px;margin-bottom:10px}.et{font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---- Connect-specific ---- */
+.searchbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.searchbar input,.searchbar select{padding:9px 12px;border:1.5px solid var(--rule);border-radius:2px;font-family:var(--sans);font-size:13px;background:#fff;outline:none}
+.searchbar input{flex:1;min-width:200px}
+.searchbar input:focus,.searchbar select:focus{border-color:var(--accent)}
+
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.acard{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:20px;cursor:pointer;transition:all .15s}
+.acard:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(14,14,12,.05)}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--warm);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:16px;flex-shrink:0}
+.avatar.sm{width:32px;height:32px;font-size:12px}
+.avatar.lg{width:72px;height:72px;font-size:24px}
+.acard-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.acard-name{font-weight:600;font-size:14px}
+.acard-head{font-size:12px;color:rgba(14,14,12,.5)}
+.acard-meta{font-size:11px;color:rgba(14,14,12,.4);line-height:1.6}
+.tag{display:inline-block;font-size:10px;background:var(--warm);color:rgba(14,14,12,.5);padding:2px 8px;border-radius:20px;margin:2px 4px 0 0}
+
+.msg-layout{display:flex;height:calc(100vh - 190px);background:#fff;border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.conv-list{width:280px;border-right:1px solid var(--rule);overflow-y:auto;flex-shrink:0}
+.conv-item{padding:14px 16px;border-bottom:1px solid var(--rule);cursor:pointer;display:flex;gap:10px;align-items:center}
+.conv-item:hover{background:var(--warm)}
+.conv-item.active{background:rgba(200,64,30,.06);border-left:3px solid var(--accent)}
+.conv-title{font-size:13px;font-weight:600}
+.conv-prev{font-size:11px;color:rgba(14,14,12,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.thread-pane{flex:1;display:flex;flex-direction:column}
+.thread-head{padding:14px 20px;border-bottom:1px solid var(--rule);font-weight:600;font-size:14px}
+.thread-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:65%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.5}
+.bubble.mine{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:2px}
+.bubble.theirs{align-self:flex-start;background:var(--warm);color:var(--ink);border-bottom-left-radius:2px}
+.bubble-meta{font-size:9px;opacity:.6;margin-top:4px}
+.thread-input{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--rule)}
+.thread-input input{flex:1;padding:10px 12px;border:1.5px solid var(--rule);border-radius:20px;font-family:var(--sans);font-size:13px;background:var(--warm);outline:none}
+.thread-input input:focus{border-color:var(--accent)}
+
+.cat-list{display:grid;gap:12px;margin-bottom:26px}
+.cat-card{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:18px 22px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.cat-card:hover{border-color:var(--accent)}
+.cat-name{font-family:var(--serif);font-size:16px;font-weight:700}
+.cat-desc{font-size:12px;color:rgba(14,14,12,.45);margin-top:3px}
+.cat-count{font-size:11px;color:rgba(14,14,12,.35)}
+.thread-row{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:16px 20px;margin-bottom:8px;cursor:pointer}
+.thread-row:hover{border-color:var(--accent)}
+.thread-row-title{font-weight:600;font-size:14px}
+.thread-row-meta{font-size:11px;color:rgba(14,14,12,.4);margin-top:4px}
+.reply{border-top:1px solid var(--rule);padding:16px 0}
+.reply-meta{font-size:11px;color:rgba(14,14,12,.4);margin-bottom:6px}
+.reply-body{font-size:13px;line-height:1.7;color:rgba(14,14,12,.8)}
+
+.jcard,.ecard{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:20px 22px;margin-bottom:12px}
+.jcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.jcard-title{font-family:var(--serif);font-size:17px;font-weight:700}
+.jcard-co{font-size:13px;color:var(--accent);font-weight:600;margin-top:2px}
+.jcard-meta{font-size:11px;color:rgba(14,14,12,.4);margin-top:6px}
+.jcard-desc{font-size:13px;color:rgba(14,14,12,.65);line-height:1.6;margin-top:10px}
+.ecard{display:flex;gap:18px}
+.edate{width:64px;flex-shrink:0;text-align:center;background:var(--warm);border-radius:2px;padding:10px 0}
+.edate .mon{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.edate .day{font-family:var(--serif);font-size:24px;font-weight:700;line-height:1.2}
+.ebody{flex:1}
+.etitle{font-family:var(--serif);font-size:16px;font-weight:700}
+.emeta{font-size:12px;color:rgba(14,14,12,.45);margin-top:4px}
+.edesc{font-size:13px;color:rgba(14,14,12,.6);line-height:1.6;margin-top:8px}
+
+.ann-card{background:#fff;border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:2px;padding:18px 22px;margin-bottom:12px}
+.ann-card.pinned{background:rgba(200,64,30,.04)}
+.ann-title{font-family:var(--serif);font-size:16px;font-weight:700}
+.ann-meta{font-size:11px;color:rgba(14,14,12,.4);margin:4px 0 8px}
+.ann-body{font-size:13px;color:rgba(14,14,12,.7);line-height:1.7;white-space:pre-wrap}
+
+.admin-tabs{display:flex;gap:4px;margin-bottom:22px;border-bottom:1px solid var(--rule)}
+.admin-tab{padding:9px 16px;font-size:12px;font-weight:600;letter-spacing:.03em;color:rgba(14,14,12,.45);cursor:pointer;border-bottom:2px solid transparent}
+.admin-tab.active{color:var(--accent);border-color:var(--accent)}
+.chk-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.chk-row:last-child{border-bottom:none}
+
+/* ── Community home ───────────────────────────────────────── */
+@media(max-width:900px){.sidebar{display:none}.mi{padding:20px}.fg2{grid-template-columns:1fr}.msg-layout{flex-direction:column;height:auto}.conv-list{width:100%;max-height:200px}}
+.hero-bleed{background:var(--ink);margin:-36px -44px 26px;padding:34px 44px 30px;position:relative;overflow:hidden}
+.hero-in{position:relative;z-index:2;max-width:760px}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:12px}
+.hero-h{font-family:var(--serif);font-size:32px;font-weight:700;color:var(--paper);line-height:1.15}
+.hero-h em{font-style:italic;color:#e8a08b}
+.hero-p{font-size:14px;color:rgba(255,255,255,.55);line-height:1.65;margin-top:10px;max-width:52ch}
+.hero-p b{color:var(--paper);font-weight:500}
+.hero-cta{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);color:var(--paper);padding:8px 15px;border-radius:2px;font-size:12.5px;font-family:var(--sans);cursor:pointer;transition:all .16s}
+.chip:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.34)}
+.chip.solid{background:var(--accent);border-color:var(--accent)}
+.chip.solid:hover{background:#b13818}
+.chip .k{font-family:var(--mono);font-size:10px;background:#e8a08b;color:var(--ink);padding:2px 6px;border-radius:2px}
+
+/* founding wall — real members solid, open seats ghosted */
+.wall{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.seat{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:#fff;flex-shrink:0}
+.seat.you{box-shadow:0 0 0 2px var(--accent),0 0 0 5px rgba(200,64,30,.3)}
+.seat.pending{background:none;border:1px dashed rgba(255,255,255,.28);color:rgba(255,255,255,.32);font-size:15px}
+.seat.open{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.11)}
+.wall-note{font-size:11.5px;color:rgba(255,255,255,.35);margin-top:12px;font-family:var(--mono);letter-spacing:.04em}
+
+/* mosaic mode, used once the network is large enough to read as one */
+.mosaic{position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));grid-auto-rows:44px;gap:4px;padding:4px;opacity:.62;z-index:1}
+.mtile{border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.7)}
+.hero-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(14,14,12,.98) 0%,rgba(14,14,12,.94) 40%,rgba(14,14,12,.55) 72%,rgba(14,14,12,.4) 100%)}
+
+/* two-column home body */
+.home-grid{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:24px;align-items:start}
+@media(max-width:1100px){.home-grid{grid-template-columns:1fr}}
+
+/* say-hi strip */
+.hi-card{background:linear-gradient(168deg,#fff 0%,#fdf6f2 100%);border:1px solid #efdfd8;border-radius:2px;margin-bottom:18px}
+.hi-hd{padding:16px 20px 0}
+.hi-hd h2{font-family:var(--serif);font-size:17px;font-weight:700}
+.hi-hd p{font-size:12px;color:rgba(14,14,12,.45);margin-top:3px}
+.hi-row{display:flex;align-items:center;gap:12px;padding:13px 20px}
+.hi-row+.hi-row{border-top:1px solid #f2eae5}
+.hi-row .nm{font-size:13.5px;font-weight:600}
+.hi-row .rl{font-size:12px;color:rgba(14,14,12,.45)}
+.hi-row .sp{flex:1;min-width:0}
+
+/* rail */
+.rail-card{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:18px 20px;margin-bottom:16px}
+.rail-card h3{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(14,14,12,.35);font-weight:400;margin-bottom:13px}
+.pbar{height:5px;background:var(--warm);border-radius:3px;overflow:hidden;margin:10px 0 8px}
+.pbar i{display:block;height:100%;background:var(--accent)}
+.rail-note{font-size:12px;color:rgba(14,14,12,.5);line-height:1.6}
+.stat-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;font-size:13px}
+.stat-row+.stat-row{border-top:1px solid var(--rule)}
+.stat-row b{margin-left:auto;font-family:var(--mono);font-size:13px;font-weight:400}
+.miss{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(14,14,12,.55);padding:5px 0}
+.miss .x{color:var(--accent);font-family:var(--mono);font-size:11px}
+
+/* empty states that invite rather than report */
+.inv{border:1px dashed var(--rule);border-radius:2px;padding:28px 24px;text-align:center;background:#fff}
+.inv h4{font-family:var(--serif);font-size:16px;font-weight:700;margin-bottom:6px}
+.inv p{font-size:12.5px;color:rgba(14,14,12,.5);line-height:1.65;max-width:44ch;margin:0 auto 14px}
+
+@media(max-width:900px){
+  .hero-bleed{margin:-20px -20px 20px;padding:24px 20px}
+  .hero-h{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ══ Mockup skin: paper topbar, pill nav, soft cards ══════════════ */
+:root{ --rule:#e6e2d9; --soft:#f4f2ec; --slate:#6b6862; --accent-soft:#f4e2dc; }
+
+/* topbar */
+.topbar{height:60px;background:rgba(250,249,245,.94);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);padding:0 24px;gap:20px}
+.topbar-brand{gap:8px;align-items:baseline}
+.t-wm{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.t-sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);
+  font-weight:700;border-left:1px solid var(--rule);padding-left:8px;margin:0}
+.topsearch{flex:1;max-width:330px;display:flex;align-items:center;gap:8px;background:#fff;
+  border:1px solid var(--rule);border-radius:999px;padding:7px 14px;color:var(--slate)}
+.topsearch input{border:none;outline:none;background:none;font-family:var(--sans);font-size:13.5px;color:var(--ink);width:100%}
+.ic{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.iconbtn{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  color:var(--slate);background:none;border:none;cursor:pointer}
+.iconbtn:hover{background:#fff;color:var(--ink)}
+.t-who{text-align:right;line-height:1.25}
+.t-name{font-size:13px;color:var(--ink);font-weight:500}
+.t-email{font-size:11px;color:rgba(14,14,12,.42)}
+.t-av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
+.rb{border-radius:999px;font-size:9.5px;padding:3px 9px}
+.rb.admin{background:var(--accent-soft);color:var(--accent)}
+.rb.alumni{background:var(--soft);color:var(--slate)}
+.btn-ghost{border:1px solid var(--rule);color:var(--slate);border-radius:999px;padding:6px 14px;background:none}
+.btn-ghost:hover{background:#fff;color:var(--ink);border-color:var(--ink)}
+
+/* sidebar */
+.sidebar{background:transparent;border-right:1px solid var(--rule);padding:14px 12px;width:224px}
+.sb-sect{padding:0;margin-bottom:18px}
+.sb-sect+.sb-sect{padding-top:16px;border-top:1px solid var(--rule)}
+.sb-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:#9c988f;padding:0 10px;margin-bottom:7px;font-weight:400}
+.nav-btn{gap:11px;padding:8px 10px;border-radius:9px;border-left:none;font-size:14px;color:#46433e;margin-bottom:2px}
+.nav-btn:hover{background:#fff;color:var(--ink)}
+.nav-btn.active{background:var(--accent-soft);color:var(--accent);font-weight:500;border-left:none}
+.nav-btn .nl{flex:1;text-align:left}
+.nav-btn .ct{font-family:var(--mono);font-size:11px;color:#9c988f}
+.nav-btn.active .ct{color:var(--accent)}
+
+/* soft cards + pill controls, matching the mockup */
+.tw,.sc,.acard,.ann-card,.modal,.rail-card,.hi-card,.inv,.jcard,.ecard{border-radius:14px}
+.ann-card{border-left-width:1px;border-left-color:var(--rule);padding:20px 22px}
+.ann-card.pinned{background:#fdf6f2;border-color:#efdfd8}
+.acard:hover{box-shadow:0 2px 14px rgba(14,14,12,.06)}
+.btn{border-radius:999px;padding:9px 18px}
+.btn-sm{padding:6px 14px}
+.btn-outline{border-width:1px;border-color:var(--rule)}
+.fl input,.fl textarea,.fl select,.searchbar input{border-radius:10px;border-width:1px}
+.edate,.date{border-radius:10px}
+.tag,.pill{border-radius:999px}
+.hero-bleed{border-radius:0}
+.chip{border-radius:999px;padding:8px 15px}
+.chip .k{border-radius:999px;padding:2px 7px}
+.avatar{font-family:var(--mono);font-weight:400}
+
+.mk{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:#9c988f;display:inline-block;min-width:52px}
+@media(max-width:900px){
+  .topsearch{display:none}
+  .t-who{display:none}
+  .topbar{padding:0 14px;gap:10px}
+  .t-right{gap:8px;min-width:0}
+  .btn-ghost{padding:6px 10px;font-size:11px;white-space:nowrap}
+  .rb{display:none}
+}
+
+/* ══ PII Connect home — mockup styles, verbatim ══ */
+
+:root{
+  --paper:#faf9f5;
+  --card:#ffffff;
+  --ink:#0e0e0c;
+  --orange:#c8401e;
+  --orange-soft:#f4e2dc;
+  --slate:#6b6862;
+  --rule:#e6e2d9;
+  --moss:#48594b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px;border-radius:3px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(250,249,245,.92);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);
+}
+.topbar-in{
+  max-width:1240px;margin:0 auto;padding:0 24px;
+  height:60px;display:flex;align-items:center;gap:24px;
+}
+.wordmark{display:flex;align-items:baseline;gap:8px}
+.wordmark .p{
+  font-family:"Playfair Display",serif;font-weight:700;font-size:21px;letter-spacing:-.01em;
+}
+.wordmark .c{
+  font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:var(--orange);font-weight:700;
+  border-left:1px solid var(--rule);padding-left:8px;
+}
+.search{
+  flex:1;max-width:340px;margin-left:8px;
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid var(--rule);border-radius:999px;
+  padding:7px 14px;color:var(--slate);font-size:13.5px;
+}
+.search input{border:none;outline:none;background:none;font:inherit;color:var(--ink);width:100%}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  color:var(--slate);position:relative;
+}
+.icon-btn:hover{background:#fff;color:var(--ink)}
+.dot{
+  position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;
+  background:var(--orange);border:1.5px solid var(--paper);
+}
+.me{
+  width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.02em;margin-left:6px;
+}
+
+/* ---------- masthead (signature) ---------- */
+.masthead{
+  position:relative;background:var(--ink);overflow:hidden;
+}
+#mosaic{
+  position:absolute;inset:0;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(46px,1fr));
+  grid-auto-rows:46px;
+  gap:4px;padding:4px;
+  opacity:.42;
+}
+.tile{
+  border-radius:7px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;letter-spacing:.03em;
+  font-family:"DM Mono",monospace;
+}
+.tile.you{
+  opacity:1;box-shadow:0 0 0 2px var(--orange), 0 0 0 6px rgba(200,64,30,.28);
+  z-index:2;
+}
+.scrim{
+  position:absolute;inset:0;
+  background:linear-gradient(100deg,rgba(14,14,12,.97) 0%,rgba(14,14,12,.9) 38%,rgba(14,14,12,.5) 70%,rgba(14,14,12,.72) 100%);
+}
+.masthead-in{
+  position:relative;max-width:1240px;margin:0 auto;padding:52px 24px 46px;
+}
+.greet-eyebrow{
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:#c9b8a8;margin-bottom:14px;
+}
+.greet{
+  font-family:"Playfair Display",serif;font-weight:600;color:var(--paper);
+  font-size:clamp(28px,4.2vw,42px);line-height:1.12;letter-spacing:-.015em;margin:0 0 14px;
+  max-width:16ch;
+}
+.greet em{font-style:italic;color:#e8a08b}
+.greet-sub{
+  color:#a9a49b;max-width:46ch;font-size:15px;margin:0 0 26px;
+}
+.greet-sub b{color:var(--paper);font-weight:500}
+.nudges{display:flex;flex-wrap:wrap;gap:9px}
+.nudge{
+  display:inline-flex;align-items:center;gap:9px;
+  background:rgba(250,249,245,.07);border:1px solid rgba(250,249,245,.16);
+  color:var(--paper);padding:8px 14px 8px 11px;border-radius:999px;font-size:13px;
+  transition:background .16s ease,border-color .16s ease;
+}
+.nudge:hover{background:rgba(250,249,245,.13);border-color:rgba(250,249,245,.32)}
+.nudge .k{
+  font-family:"DM Mono",monospace;font-size:11px;color:var(--ink);background:#e8a08b;
+  border-radius:5px;padding:2px 6px;font-weight:500;
+}
+.nudge.primary{background:var(--orange);border-color:var(--orange)}
+.nudge.primary:hover{background:#b13818}
+
+/* ---------- shell ---------- */
+.shell{
+  max-width:1240px;margin:0 auto;padding:26px 24px 72px;
+  display:grid;grid-template-columns:200px minmax(0,1fr) 296px;gap:26px;align-items:start;
+}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:86px}
+.nav-group+.nav-group{margin-top:22px;padding-top:18px;border-top:1px solid var(--rule)}
+.nav-label{
+  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+  color:#9c988f;padding:0 10px;margin-bottom:8px;
+}
+.nav a{
+  display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:8px;
+  color:#46433e;font-size:14.5px;transition:background .14s ease,color .14s ease;
+}
+.nav a:hover{background:#fff;color:var(--ink)}
+.nav a.active{background:var(--orange-soft);color:var(--orange);font-weight:500}
+.nav a .ct{
+  margin-left:auto;font-family:"DM Mono",monospace;font-size:11px;color:#9c988f;
+}
+.nav a.active .ct{color:var(--orange)}
+.ico{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+}
+.card+.card{margin-top:20px}
+.card-hd{
+  display:flex;align-items:baseline;gap:12px;padding:18px 20px 0;
+}
+.card-hd h2{
+  font-family:"Playfair Display",serif;font-weight:600;font-size:19px;letter-spacing:-.01em;margin:0;
+}
+.card-hd .more{
+  margin-left:auto;font-size:12px;color:var(--orange);font-weight:500;
+}
+.card-hd .more:hover{text-decoration:underline}
+.card-note{padding:2px 20px 0;color:var(--slate);font-size:13px}
+
+/* ---------- introductions (the warm bit) ---------- */
+.intro-card{background:linear-gradient(168deg,#fff 0%,#fdf6f2 100%);border-color:#efdfd8}
+.intro-row{
+  display:flex;align-items:center;gap:13px;padding:14px 20px;
+}
+.intro-row+.intro-row{border-top:1px solid #f2eae5}
+.av{
+  width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-family:"DM Mono",monospace;font-size:13px;font-weight:500;color:#fff;
+}
+.av.sm{width:34px;height:34px;font-size:11px}
+.av.xs{width:26px;height:26px;font-size:9.5px}
+.intro-meta{min-width:0;flex:1}
+.intro-meta .nm{font-weight:500;font-size:14.5px}
+.intro-meta .rl{color:var(--slate);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wave{
+  flex:none;border:1px solid var(--rule);background:#fff;border-radius:999px;
+  padding:6px 14px;font-size:13px;font-weight:500;transition:.16s ease;
+}
+.wave:hover{border-color:var(--orange);color:var(--orange)}
+.wave.done{background:var(--orange-soft);border-color:var(--orange-soft);color:var(--orange)}
+
+/* ---------- feed ---------- */
+.post{padding:20px}
+.post+.post{border-top:1px solid var(--rule)}
+.post-hd{display:flex;gap:12px;align-items:flex-start}
+.post-hd .nm{font-weight:500}
+.post-hd .rl{color:var(--slate);font-size:13px}
+.mtag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--slate);background:#f4f2ec;border-radius:5px;padding:2px 7px;
+}
+.mtag.cohort{background:var(--orange-soft);color:var(--orange)}
+.post-body{margin:11px 0 0;font-size:14.8px;color:#26241f}
+.post-body a.link{color:var(--orange);font-weight:500}
+.post-actions{display:flex;gap:20px;margin-top:14px;color:var(--slate);font-size:13px}
+.post-actions button{display:flex;align-items:center;gap:6px}
+.post-actions button:hover{color:var(--orange)}
+.stack{display:flex;padding-left:6px}
+.stack .av{margin-left:-6px;border:2px solid #fff}
+
+/* composer */
+.composer{display:flex;gap:12px;padding:16px 20px;align-items:center;border-bottom:1px solid var(--rule)}
+.composer input{
+  flex:1;border:1px solid var(--rule);border-radius:999px;padding:10px 16px;
+  font:inherit;font-size:14px;background:var(--paper);outline:none;
+}
+.composer input:focus{border-color:var(--orange);background:#fff}
+
+/* ---------- right rail ---------- */
+.rail .card{padding:18px 20px}
+.rail h3{
+  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+  color:#9c988f;margin:0 0 14px;font-weight:500;
+}
+.cohort-name{font-family:"Playfair Display",serif;font-size:18px;font-weight:600;line-height:1.25;margin:0 0 4px}
+.cohort-sub{color:var(--slate);font-size:13px;margin:0 0 14px}
+.bar{height:5px;background:#f0ede5;border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bar i{display:block;height:100%;background:var(--orange);border-radius:3px}
+.near-row{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px}
+.near-row+.near-row{border-top:1px solid #f2f0ea}
+.near-row .ct{margin-left:auto;font-family:"DM Mono",monospace;font-size:12px;color:var(--slate)}
+.near-row:hover .city{color:var(--orange)}
+.ev{display:flex;gap:13px;padding:11px 0}
+.ev+.ev{border-top:1px solid #f2f0ea}
+.date{
+  flex:none;width:44px;text-align:center;border:1px solid var(--rule);border-radius:8px;padding:5px 0;
+}
+.date .m{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--orange)}
+.date .d{font-family:"Playfair Display",serif;font-size:18px;font-weight:600;line-height:1.1}
+.ev .ttl{font-size:14px;font-weight:500;line-height:1.3}
+.ev .mt{color:var(--slate);font-size:12.5px}
+
+.foot{
+  max-width:1240px;margin:0 auto;padding:0 24px 40px;color:#9c988f;font-size:12.5px;
+}
+
+@media(max-width:1080px){
+  .shell{grid-template-columns:180px minmax(0,1fr)}
+  .rail{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+  .rail .card+.card{margin-top:0}
+}
+@media(max-width:720px){
+  .shell{grid-template-columns:1fr;padding:18px 16px 60px}
+  .nav{position:static;display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+  .nav-group+.nav-group{margin-top:0;padding-top:0;border:none;display:flex;gap:6px}
+  .nav-group{display:flex;gap:6px}
+  .nav-label{display:none}
+  .nav a{white-space:nowrap;background:#fff;border:1px solid var(--rule)}
+  .nav a .ct{display:none}
+  .search{display:none}
+  .masthead-in{padding:36px 16px 34px}
+  .topbar-in{padding:0 16px}
+  .foot{padding:0 16px 32px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+
+/* ── inner pages: same card language as home ─────────────────── */
+body.not-home .shell{grid-template-columns:200px minmax(0,1fr) 296px}
+body.not-home .rail{display:block}
+@media(max-width:1100px){ body.not-home .shell{grid-template-columns:200px minmax(0,1fr)} body.not-home .rail{display:none} }
+@media(max-width:720px){ body.not-home .shell{grid-template-columns:1fr} }
+
+.pagehead{margin-bottom:18px}
+.pagehead h1{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:-.015em;margin:0 0 3px}
+.pagehead p{color:var(--slate);font-size:13.5px;margin:0}
+.pagehead-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.pagehead-row .spacer{flex:1}
+
+.bigsearch{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--rule);
+  border-radius:999px;padding:11px 18px;margin-bottom:16px}
+.bigsearch input{flex:1;border:none;outline:none;background:none;font-family:var(--sans);font-size:14px;color:var(--ink)}
+.resultcount{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:#9c988f;margin-bottom:10px}
+
+.lcard{background:#fff;border:1px solid var(--rule);border-radius:14px;padding:20px 22px;margin-bottom:12px;
+  transition:box-shadow .16s ease,border-color .16s ease}
+.lcard:hover{box-shadow:0 3px 16px rgba(14,14,12,.06);border-color:#dcd7cb}
+.lcard-t{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.3;margin:0 0 3px}
+.lcard-t a,.lcard-t button{color:var(--accent);background:none;border:none;padding:0;font:inherit;cursor:pointer;text-align:left}
+.lcard-t a:hover,.lcard-t button:hover{text-decoration:underline}
+.lcard-sub{font-size:13.5px;color:var(--ink);margin-bottom:6px}
+.lcard-meta{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#9c988f;margin-bottom:10px}
+.lcard-body{font-size:14px;color:#3a3833;line-height:1.65}
+.lcard-row{display:flex;gap:14px;align-items:flex-start}
+.lcard-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+.crest{width:44px;height:44px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:13px;color:#fff;letter-spacing:.02em}
+
+.chipbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.fchip{border:1px solid var(--rule);background:#fff;border-radius:999px;padding:6px 14px;font-size:12.5px;
+  color:var(--slate);cursor:pointer;font-family:var(--sans)}
+.fchip:hover{border-color:var(--ink);color:var(--ink)}
+.fchip.on{background:var(--accent-soft,#f4e2dc);border-color:transparent;color:var(--accent);font-weight:500}
+
+/* groups */
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.gcard{background:#fff;border:1px solid var(--rule);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:9px}
+.gcard:hover{box-shadow:0 3px 16px rgba(14,14,12,.06)}
+.gcard-top{display:flex;gap:12px;align-items:center}
+.gcard-n{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.25}
+.gcard-d{font-size:13px;color:var(--slate);line-height:1.6;flex:1}
+.gcard-f{display:flex;align-items:center;gap:10px;padding-top:11px;border-top:1px solid var(--rule)}
+.gcard-f .n{font-family:var(--mono);font-size:11px;color:#9c988f;flex:1}
+
+.gpost{background:#fff;border:1px solid var(--rule);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+.gpost-hd{display:flex;gap:11px;align-items:center;margin-bottom:10px}
+.gpost-hd .who{font-weight:500;font-size:14px}
+.gpost-hd .when{font-family:var(--mono);font-size:10.5px;color:#9c988f;letter-spacing:.05em}
+.gpost-body{font-size:14.5px;line-height:1.7;color:#26241f;white-space:pre-wrap}
+.gpost-foot{display:flex;gap:14px;margin-top:12px;padding-top:11px;border-top:1px solid #f2f0ea;
+  font-size:12.5px;color:var(--slate);align-items:center}
+.gpost-foot button{background:none;border:none;color:var(--slate);cursor:pointer;font:inherit;padding:0}
+.gpost-foot button:hover{color:var(--accent)}
+.gpost-foot .sep{color:#ddd8cd}
+.greply{display:flex;gap:10px;padding:11px 0 0 6px;border-top:1px solid #f7f5f0;margin-top:10px}
+.greply .rtxt{font-size:13.5px;line-height:1.6;color:#3a3833;white-space:pre-wrap}
+.greply .rm{font-family:var(--mono);font-size:10px;color:#9c988f;letter-spacing:.05em;margin-bottom:3px}
+.tw{overflow-x:auto}
+.tw table{width:100%;min-width:560px}
+.tw td,.tw th{vertical-align:middle}
+
+.rowacts{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+.rowacts .btn{white-space:nowrap}
+
+/* admin rows — wrap instead of scrolling sideways */
+.mrow{display:flex;align-items:center;gap:14px;padding:13px 18px;background:#fff;
+  border:1px solid var(--rule);border-radius:14px;margin-bottom:9px;flex-wrap:wrap}
+.mrow:hover{border-color:#dcd7cb}
+.mrow .who{flex:1 1 240px;min-width:0}
+.mrow .nm{font-weight:600;font-size:14.5px;line-height:1.3}
+.mrow .em{font-size:12.5px;color:var(--slate);overflow-wrap:anywhere;line-height:1.4}
+.mrow .meta{font-family:var(--mono);font-size:10.5px;color:#9c988f;letter-spacing:.05em;
+  text-transform:uppercase;flex:0 0 auto}
+.mrow .acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;flex:0 0 auto}
+.mrow .acts .btn{white-space:nowrap}
+.mrow input[type=checkbox]{width:16px;height:16px;flex:none;margin:0}
+.selbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.pagehead-row{flex-wrap:wrap}
+.ph{flex-wrap:wrap}
+.ph-act{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:620px){ .ph > div:first-child{flex:1 1 100%} .ph-act{width:100%} .ph-act .btn{flex:1 1 auto} }
+.pagehead-row .btn{white-space:nowrap}
+@media(max-width:620px){
+  .pagehead-row{gap:10px}
+  .pagehead-row .spacer{display:none}
+  .pagehead-row > div:first-child{flex:1 1 100%}
+  .pagehead-row .btn{flex:1 1 auto}
+}
+@media(max-width:560px){ .mrow .acts{margin-left:0;width:100%} }
+.inline-ed{width:100%;border:1px solid var(--rule);border-radius:10px;padding:10px 12px;
+  font-family:var(--sans);font-size:14px;resize:vertical}
+
+/* ── bridge: let the mockup's page-flow layout win over the app shell ── */
+.topbar{display:block!important;height:auto!important;background:rgba(250,249,245,.92)!important;padding:0!important}
+.sidebar{width:auto;background:none;border:none;padding:0;overflow:visible}
+html,body{overflow:auto!important;height:auto!important}
+#app{display:block!important;height:auto!important}
+#app:not(.ready){display:none!important}
+.layout,.main,.mi{display:block;overflow:visible;height:auto;flex:none;padding:0;max-width:none;background:none}
+#loading{display:flex}
+/* views other than Home render into #view and keep the app's own components */
+body.not-home .masthead,body.not-home #home-only{display:none}
+body.not-home #view{padding-top:4px}
+body.is-home #view{display:none}
+.toast-anchor{position:fixed}
+@media(max-width:720px){ body.not-home .shell{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div id="loading"><div class="load-ring"></div><p class="load-txt" id="load-msg">Loading PII Connect</p></div>
+<div id="toast"></div>
+<div id="app">
+
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="wordmark" href="#"><span class="p">PII</span><span class="c">Connect</span></a>
+    <label class="search">
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="globalSearch" placeholder="Find people, groups, cities" aria-label="Search the network">
+    </label>
+    <div class="topbar-right">
+      <button class="icon-btn" aria-label="Messages" data-go="messages"><svg class="ico" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z"/></svg><span class="dot"></span></button>
+      <button class="icon-btn" aria-label="Notifications"><svg class="ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 8-2 8h16s-2-2-2-8"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span class="dot"></span></button>
+      <div class="me" id="tAvatar" title="Sign out" onclick="signOut()"></div><span id="tName" hidden></span><span id="tEmail" hidden></span><span id="roleBadge" hidden></span>
+    </div>
+  </div>
+</header>
+
+<section class="masthead">
+  <div id="mosaic" aria-hidden="true"></div>
+  <div class="scrim"></div>
+  <div class="masthead-in">
+    <div class="greet-eyebrow">Wednesday · 19 August</div>
+    <h1 class="greet">Good morning, <em>Khahlil</em></h1>
+    <p class="greet-sub">You're one of <b>214 people</b> in the PII network across <b>38 cities</b>. Six joined this week — three from your own cohort.</p>
+    <div class="nudges">
+      <a class="nudge primary" href="#intro">Say hello to the new six</a>
+      <a class="nudge" href="#"><span class="k">52%</span> Finish your profile</a>
+      <a class="nudge" href="#">Open to mentor? Set your availability</a>
+    </div>
+  </div>
+</section>
+
+<div class="shell">
+
+  <nav class="nav" aria-label="Primary">
+    <div class="nav-group">
+      <a href="#home" data-view="home" onclick="nav(&quot;home&quot;);return false" class="active"><svg class="ico" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>Home</a>
+      <a href="#announcements" data-view="announcements" onclick="nav(&quot;announcements&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</a>
+      <a href="#directory" data-view="directory" onclick="nav(&quot;directory&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5"/></svg>Directory<span class="ct" id="ct-directory"></span></a>
+      <a href="#cities" data-view="cities" onclick="nav(&quot;cities&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a13 13 0 0 0 0 16M12 4a13 13 0 0 1 0 16M4.5 9h15M4.5 15h15"/></svg>Cities<span class="ct" id="ct-cities"></span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Belong</div>
+      <a href="#groups" data-view="groups" onclick="nav(&quot;groups&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="9" r="2.6"/><circle cx="16.5" cy="10.5" r="2.2"/><path d="M4 19c.9-2.8 2.9-4 5-4s4.1 1.2 5 4"/><path d="M15 15.3c1.9.2 3.3 1.4 4 3.7"/></svg>Groups<span class="ct" id="ct-groups"></span></a>
+      <a href="#forums" data-view="forums" onclick="nav(&quot;forums&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3 4 7v6c0 4.4 3.3 7.3 8 8 4.7-.7 8-3.6 8-8V7Z"/><path d="m9 12 2 2 4-4"/></svg>Forums</a>
+      <a href="#events" data-view="events" onclick="nav(&quot;events&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Events<span class="ct" id="ct-events"></span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Build</div>
+      <a href="#jobs" data-view="jobs" onclick="nav(&quot;jobs&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>Jobs<span class="ct" id="ct-jobs"></span></a>
+      <a href="#messages" data-view="messages" onclick="nav(&quot;messages&quot;);return false"><svg class="ico" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z"/></svg>Messages</a>
+      <a href="#admin" data-view="admin" onclick="nav(&quot;admin&quot;);return false" id="adminNavSect" style="display:none"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8.5"/></svg>Manage Alumni</a>
+    </div>
+  </nav>
+
+  <main>
+    <div id="view"></div>
+    <div id="home-only">
+    <section class="card intro-card" id="intro">
+      <div class="card-hd">
+        <h2>New this week</h2>
+        <a class="more" href="#">See all members</a>
+      </div>
+      <p class="card-note">A hello takes ten seconds and it's the whole point of this place.</p>
+      <div id="intros" style="margin-top:6px"></div>
+    </section>
+
+    <section class="card">
+      <div class="composer">
+        <div class="av sm" id="composerAv" style="background:#0e0e0c"></div>
+        <input id="composerInput" placeholder="Share something with the network…" aria-label="Start a discussion">
+      </div>
+      <div id="feed"></div>
+    </section>
+    </div>
+  </main>
+
+  <aside class="rail">
+    <section class="card">
+      <h3>Your cohort</h3>
+      <p class="cohort-name">Summer Innovation Program '26</p>
+      <p class="cohort-sub">28 members · 9 cities · started 2 June</p>
+      <div class="bar"><i style="width:64%"></i></div>
+      <p class="cohort-sub" style="margin:0">18 of 28 have completed their profile</p>
+      <div class="stack" style="margin-top:14px" id="cohortStack"></div>
+    </section>
+
+    <section class="card">
+      <h3>Members near you</h3>
+      <div id="cities"></div>
+    </section>
+
+    <section class="card">
+      <h3>Coming up</h3>
+      <div id="events"></div>
+    </section>
+  </aside>
+</div>
+
+<div class="foot">PII Connect · The Public Innovation Institute</div>
+
+</div>
+<!-- Group modal -->
+<div class="mo" id="m-group"><div class="modal">
+  <div class="modal-title" id="gm-title">New group</div>
+  <input type="hidden" id="gm-id"/>
+  <div class="fg">
+    <div class="fl"><label>Name</label><input type="text" id="gm-name" placeholder="e.g. Municipal AI"/></div>
+    <div class="fl"><label>Topic</label><input type="text" id="gm-topic" placeholder="e.g. Technology"/></div>
+    <div class="fl"><label>What is this group for?</label><textarea id="gm-desc" rows="3"></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-group')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveGroup()">Save</button>
+  </div>
+</div></div>
+
+<!-- Edit my profile -->
+<div class="mo" id="m-editprofile"><div class="modal">
+  <div class="modal-title">Edit your profile</div>
+  <div class="fg">
+    <div class="fl"><label>Full Name</label><input type="text" id="ep-fullname"/></div>
+    <div class="fl"><label>Headline</label><input type="text" id="ep-headline" placeholder="e.g. Transit planner, City of Accra"/></div>
+    <div class="fg fg2">
+      <div class="fl"><label>Job Title</label><input type="text" id="ep-jobtitle"/></div>
+      <div class="fl"><label>Company / Organization</label><input type="text" id="ep-company"/></div>
+    </div>
+    <div class="fg fg2">
+      <div class="fl"><label>City</label><input type="text" id="ep-location" placeholder="e.g. Boston"/></div>
+      <div class="fl"><label>PII Program</label><input type="text" id="ep-program" placeholder="e.g. DSIPP '22"/></div>
+    </div>
+    <div class="fl"><label>Bio</label><textarea id="ep-bio" rows="4"></textarea></div>
+    <div class="fg fg2">
+      <div class="fl"><label>LinkedIn URL</label><input type="url" id="ep-linkedin" placeholder="https://…"/></div>
+      <div class="fl"><label>Website</label><input type="url" id="ep-website" placeholder="https://…"/></div>
+    </div>
+    <div class="fl"><label>Who can see this profile</label>
+      <select id="ep-visibility">
+        <option value="alumni">Everyone in the network</option>
+        <option value="private">Only me</option>
+      </select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-editprofile')">Cancel</button>
+    <button class="btn btn-primary" id="ep-save" onclick="saveMyProfile()">Save changes</button>
+  </div>
+</div></div>
+
+<!-- Profile modal -->
+<div class="mo" id="m-profile"><div class="modal" id="m-profile-body"></div></div>
+<!-- New conversation modal -->
+<div class="mo" id="m-newmsg"><div class="modal">
+  <div class="modal-title">New Message</div>
+  <div class="fg">
+    <div class="fl"><label>To</label><input type="text" id="nm-search" placeholder="Search alumni by name…" oninput="searchRecipients()"/></div>
+    <div id="nm-results" style="max-height:180px;overflow-y:auto"></div>
+    <div id="nm-selected" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-newmsg')">Cancel</button>
+    <button class="btn btn-primary" onclick="startConversation()">Start Conversation</button>
+  </div>
+</div></div>
+<!-- New thread modal -->
+<div class="mo" id="m-thread"><div class="modal">
+  <div class="modal-title">New Thread</div>
+  <div class="fg">
+    <div class="fl"><label>Title</label><input type="text" id="th-title"/></div>
+    <div class="fl"><label>Post</label><textarea id="th-body" rows="5"></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-thread')">Cancel</button>
+    <button class="btn btn-primary" onclick="createThread()">Post Thread</button>
+  </div>
+</div></div>
+<!-- Job modal -->
+<div class="mo" id="m-job"><div class="modal">
+  <div class="modal-title">Post a Job</div>
+  <div class="fg">
+    <div class="fg fg2">
+      <div class="fl"><label>Title</label><input type="text" id="job-title"/></div>
+      <div class="fl"><label>Company</label><input type="text" id="job-company"/></div>
+    </div>
+    <div class="fg fg2">
+      <div class="fl"><label>Location</label><input type="text" id="job-location" placeholder="Boston, MA"/></div>
+      <div class="fl"><label>Type</label><select id="job-type"><option value="full_time">Full-time</option><option value="part_time">Part-time</option><option value="contract">Contract</option><option value="internship">Internship</option></select></div>
+    </div>
+    <div class="fl"><label><input type="checkbox" id="job-remote" style="width:auto;display:inline-block;margin-right:6px"/>Remote OK</label></div>
+    <div class="fl"><label>Description</label><textarea id="job-desc" rows="4"></textarea></div>
+    <div class="fg fg2">
+      <div class="fl"><label>Apply URL</label><input type="text" id="job-url"/></div>
+      <div class="fl"><label>Apply Email</label><input type="email" id="job-email"/></div>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-job')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveJob()">Post Job</button>
+  </div>
+</div></div>
+<!-- Event modal -->
+<div class="mo" id="m-event"><div class="modal">
+  <div class="modal-title">New Event</div>
+  <div class="fg">
+    <div class="fl"><label>Title</label><input type="text" id="ev-title"/></div>
+    <div class="fg fg2">
+      <div class="fl"><label>Starts</label><input type="datetime-local" id="ev-start"/></div>
+      <div class="fl"><label>Ends</label><input type="datetime-local" id="ev-end"/></div>
+    </div>
+    <div class="fl"><label><input type="checkbox" id="ev-virtual" style="width:auto;display:inline-block;margin-right:6px" onchange="document.getElementById('ev-loc-wrap').style.display=this.checked?'none':'block';document.getElementById('ev-link-wrap').style.display=this.checked?'block':'none'"/>Virtual Event</label></div>
+    <div class="fl" id="ev-loc-wrap"><label>Location</label><input type="text" id="ev-location"/></div>
+    <div class="fl" id="ev-link-wrap" style="display:none"><label>Virtual Link</label><input type="text" id="ev-link"/></div>
+    <div class="fl"><label>Description</label><textarea id="ev-desc" rows="4"></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-event')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveEvent()">Create Event</button>
+  </div>
+</div></div>
+<!-- Announcement modal -->
+<div class="mo" id="m-ann"><div class="modal">
+  <div class="modal-title">Post Announcement to All Alumni</div>
+  <div class="fg">
+    <div class="fl"><label>Title</label><input type="text" id="ann-title"/></div>
+    <div class="fl"><label>Message</label><textarea id="ann-body" rows="6"></textarea></div>
+    <div class="fl"><label><input type="checkbox" id="ann-pin" style="width:auto;display:inline-block;margin-right:6px"/>Pin to top</label></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-ann')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveAnnouncement()">Post to All Alumni</button>
+  </div>
+</div></div>
+<!-- Add alumni modal -->
+<div class="mo" id="m-addalum"><div class="modal">
+  <div class="modal-title">Add Alumni</div>
+  <div class="fg">
+    <div class="fl"><label>Email</label><input type="email" id="aa-email"/></div>
+    <div class="fl"><label>Full Name</label><input type="text" id="aa-name"/></div>
+    <div class="fl"><label>Program</label><input type="text" id="aa-program" placeholder="e.g. DSIPP'22"/></div>
+  </div>
+  <p style="font-size:12px;color:rgba(14,14,12,.5);margin-top:10px;line-height:1.6">This adds them to the alumni list — it does not create an account or send email. If they already have a PII Learn account, access unlocks next time they sign in. If they don't, you'll get an invite link to send them so they can set their own password.</p>
+  <div class="modal-actions">
+    <button class="btn btn-outline" onclick="closeModal('m-addalum')">Cancel</button>
+    <button class="btn btn-primary" onclick="addAlumniManual()">Add to Alumni List</button>
+  </div>
+</div></div>
+<script type="module">
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPA_URL = 'https://adtgtzblbneqedkysurk.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdGd0emJsYm5lcWVka3lzdXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM2MTcsImV4cCI6MjA5ODEzOTYxN30.1OekgKjJONMYsv0-k_tIkwlHsTczfNPhcT4u4b9sLEw';
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+let USER = null, CROLE = null, ACTIVE_CONV = null, MSG_CHANNEL = null, NM_SELECTED = [];
+
+function loadMsg(m){ document.getElementById('load-msg').textContent = m; }
+function showLoadError(msg){
+  const l = document.getElementById('loading');
+  l.style.display = 'flex';
+  document.getElementById('app').classList.remove('ready');
+  l.innerHTML=`<p style="color:#e8795a;font-size:13px;max-width:340px;text-align:center;line-height:1.7;padding:0 20px">${msg}</p><a href="index.html" style="color:rgba(255,255,255,.5);font-size:12px;margin-top:16px;display:block;text-align:center">← Back to Sign In</a>`;
+}
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initials(name){ if(!name) return '?'; const p=name.trim().split(/\s+/); return ((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase()||name[0].toUpperCase(); }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtDateTime(d){ return new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+window.closeModal = function(id){ document.getElementById(id).classList.remove('open'); };
+window.openModal = function(id){ document.getElementById(id).classList.add('open'); };
+window.signOut = async function(){ await sb.auth.signOut(); window.location.href='index.html'; };
+
+async function boot(){
+try {
+  loadMsg('Checking session…');
+  const { data: sd, error: se } = await sb.auth.getSession();
+  if (se) throw se;
+  if (!sd?.session) { window.location.href='index.html'; throw new Error('redirect'); }
+
+  loadMsg('Loading profile…');
+  const uid = sd.session.user.id;
+  let { data: profile } = await sb.from('profiles').select('*').eq('id', uid).single();
+  if (!profile || profile.connect_role === 'none') { window.location.href='index.html'; throw new Error('redirect'); }
+
+  USER = profile; CROLE = profile.connect_role;
+  document.getElementById('tName').textContent = profile.full_name || profile.email;
+  document.getElementById('tEmail').textContent = profile.email;
+  const badge = document.getElementById('roleBadge');
+  badge.textContent = CROLE.charAt(0).toUpperCase()+CROLE.slice(1);
+  badge.className = 'rb '+CROLE;
+  if (CROLE === 'admin') document.getElementById('adminNavSect').style.display = 'flex';
+
+  document.getElementById('tAvatar').textContent = initials(profile.full_name || profile.email);
+  document.getElementById('tAvatar').title = (profile.full_name||profile.email) + ' — sign out';
+
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').classList.add('ready');
+
+  nav(location.hash.replace('#','') || 'home');
+} catch(e) {
+  if (e.message !== 'redirect') { console.error(e); showLoadError('Something went wrong loading PII Connect. Please try signing in again.'); }
+}
+}
+
+// ── Nav / routing ──────────────────────────────────────────────
+window.openEditProfile = async function(){
+  const { data: a } = await sb.from('connect_alumni_profiles').select('*').eq('user_id', USER.id).maybeSingle();
+  const v = (id,val)=>{ document.getElementById(id).value = val || ''; };
+  v('ep-fullname', USER.full_name);
+  v('ep-headline', a?.headline); v('ep-jobtitle', a?.job_title); v('ep-company', a?.company);
+  v('ep-location', a?.location); v('ep-program', a?.grad_program); v('ep-bio', a?.bio);
+  v('ep-linkedin', a?.linkedin_url); v('ep-website', a?.website_url);
+  document.getElementById('ep-visibility').value = a?.visibility || 'alumni';
+  closeModal('m-profile');
+  openModal('m-editprofile');
+};
+
+window.saveMyProfile = async function(){
+  const btn = document.getElementById('ep-save');
+  const g = id => document.getElementById(id).value.trim();
+  const name = g('ep-fullname');
+  if (!name){ toast('Your name cannot be blank'); return; }
+  const url = u => !u || /^https?:\/\//i.test(u);
+  if (!url(g('ep-linkedin')) || !url(g('ep-website'))){ toast('Links must start with http:// or https://'); return; }
+
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const row = {
+    user_id: USER.id,
+    headline: g('ep-headline') || null, job_title: g('ep-jobtitle') || null,
+    company: g('ep-company') || null,  location: g('ep-location') || null,
+    grad_program: g('ep-program') || null, bio: g('ep-bio') || null,
+    linkedin_url: g('ep-linkedin') || null, website_url: g('ep-website') || null,
+    visibility: document.getElementById('ep-visibility').value,
+    updated_at: new Date().toISOString()
+  };
+  const { error: e1 } = await sb.from('connect_alumni_profiles').upsert(row, { onConflict:'user_id' });
+  if (e1){ console.error(e1); toast('Could not save your profile'); btn.disabled=false; btn.textContent='Save changes'; return; }
+
+  if (name !== USER.full_name){
+    const { error: e2 } = await sb.from('profiles').update({ full_name: name }).eq('id', USER.id);
+    if (e2){ console.error(e2); toast('Profile saved, but the name change failed'); }
+    else { USER.full_name = name; document.getElementById('tAvatar').textContent = initials(name); }
+  }
+
+  btn.disabled=false; btn.textContent='Save changes';
+  closeModal('m-editprofile');
+  toast('Profile updated');
+  HOME_CACHE = null; DIR_CACHE = null;
+  nav(location.hash.replace('#','') || 'home');
+};
+
+let CURRENT_VIEW = null;
+window.nav = function(view){
+  CURRENT_VIEW = view;
+  document.querySelectorAll('.nav a[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  if (location.hash.replace('#','') !== view) location.hash = view;
+  if (MSG_CHANNEL) { sb.removeChannel(MSG_CHANNEL); MSG_CHANNEL=null; }
+  if (view !== 'home'){ document.body.classList.add('not-home'); document.body.classList.remove('is-home'); }
+  const render = { home:renderHome, directory:renderDirectory, messages:renderMessages, forums:renderForums,
+    jobs:renderJobs, events:renderEvents, announcements:renderAnnouncements, admin:renderAdmin,
+    cities:renderCities, groups:renderGroups }[view] || renderHome;
+  window.scrollTo(0,0);
+  if (view !== 'home'){ const r=document.querySelector('.rail'); if(r) r.innerHTML=''; }
+  Promise.resolve(render()).catch(e=>{ console.error(e); toast('Could not load that page'); });
+};
+
+// Back / forward and manual hash edits should navigate.
+window.addEventListener('hashchange', ()=>{
+  const v = location.hash.replace('#','') || 'home';
+  if (v !== CURRENT_VIEW) nav(v);
+});
+
+// delegated actions for the mockup's static markup
+document.addEventListener('click', e=>{
+  const go = e.target.closest('[data-go]');
+  if (go){ e.preventDefault();
+    const t = go.dataset.go;
+    if (t === 'profile') openEditProfile(); else nav(t);
+    return; }
+  const w = e.target.closest('.wave[data-msg]');
+  if (w){ w.classList.add('done'); w.textContent='Opening…'; messageUser(w.dataset.msg, w.dataset.name); }
+});
+document.addEventListener('keydown', e=>{
+  if (e.key !== 'Enter') return;
+  if (e.target.id === 'globalSearch'){
+    const q = e.target.value.trim(); if(!q) return;
+    nav('directory');
+    setTimeout(()=>{ const el=document.getElementById('dir-search'); if(el){ el.value=q; filterDirectory(); } }, 350);
+  }
+  if (e.target.id === 'composerInput'){ if(e.target.value.trim()) nav('forums'); }
+});
+
+// ── HOME (mockup markup, real data) ──────────────────────────
+const SEAT_HUES = ['#c8401e','#48594b','#8a6a3b','#3f5a6b','#7a3f52','#a35a3a','#4c4a45','#2f4858'];
+function hueFor(s){ let n=0; for(const c of (s||'?')) n+=c.charCodeAt(0); return SEAT_HUES[n%SEAT_HUES.length]; }
+function daysAgo(d){ return Math.floor((Date.now()-new Date(d).getTime())/86400000); }
+function avTile(name, cls){ return `<div class="av ${cls||''}" style="background:${hueFor(name)}" title="${esc(name)}">${esc(initials(name))}</div>`; }
+
+let HOME_CACHE = null;
+async function loadNetwork(){
+  if (HOME_CACHE) return HOME_CACHE;
+  const [mem, prof, ann, ev, inv] = await Promise.all([
+    sb.from('profiles').select('id,full_name,email,connect_joined_at').neq('connect_role','none').order('connect_joined_at',{ascending:true}),
+    sb.from('connect_alumni_profiles').select('user_id,headline,job_title,company,location,grad_program,bio,linkedin_url'),
+    sb.from('connect_announcements').select('*,profiles(full_name)').order('pinned',{ascending:false}).order('created_at',{ascending:false}).limit(6),
+    sb.from('connect_events').select('*').gte('start_at',new Date().toISOString()).order('start_at').limit(3),
+    CROLE==='admin' ? sb.from('connect_invited_alumni').select('email,full_name').eq('status','invited') : Promise.resolve({data:[]})
+  ]);
+  HOME_CACHE = { members:mem.data||[], profiles:prof.data||[], anns:ann.data||[], events:ev.data||[], invites:inv.data||[] };
+  return HOME_CACHE;
+}
+function myProfile(N){ return N.profiles.find(p=>p.user_id===USER.id) || null; }
+function gapsOf(a){
+  return [['headline','a one-line headline'],['location','your city'],['company','where you work'],
+          ['bio','a short bio'],['grad_program','your PII program'],['linkedin_url','your LinkedIn']]
+         .filter(([k])=>!a || !a[k] || String(a[k]).trim()==='');
+}
+
+async function renderHome(){
+  document.body.classList.add('is-home'); document.body.classList.remove('not-home');
+  const N = await loadNetwork();
+  const n = N.members.length;
+  const first = (USER.full_name||'').split(' ')[0] || '';
+  const mine = myProfile(N), gaps = gapsOf(mine), pct = Math.round(((6-gaps.length)/6)*100);
+  const recent = N.members.filter(m=>m.id!==USER.id && m.connect_joined_at && daysAgo(m.connect_joined_at)<=30);
+
+  // ── masthead mosaic: every member, you circled ──
+  const mos = document.getElementById('mosaic');
+  const meIdx = Math.max(0, N.members.findIndex(m=>m.id===USER.id));
+  mos.innerHTML = Array.from({length:120},(_,i)=>{
+    const m = N.members[i % Math.max(n,1)];
+    const you = n>0 && (i % n) === meIdx;
+    const nm = m ? (m.full_name||m.email) : '';
+    return `<div class="tile ${you?'you':''}" style="background:${you?'#c8401e':hueFor(nm||String(i))};color:${you?'#fff':'rgba(255,255,255,.72)'}">${esc(initials(nm))}</div>`;
+  }).join('');
+
+  document.querySelector('.greet-eyebrow').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long'});
+  document.querySelector('.greet').innerHTML = `Good ${new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, <em>${esc(first)}</em>`;
+  const cities = new Set(N.profiles.map(p=>p.location).filter(Boolean));
+  document.querySelector('.greet-sub').innerHTML =
+    `You're one of <b>${n} ${n===1?'person':'people'}</b> in the PII network${cities.size?` across <b>${cities.size} ${cities.size===1?'city':'cities'}</b>`:''}.` +
+    (recent.length?` ${recent.length} joined this month.`:' The network is just getting started.');
+
+  document.querySelector('.nudges').innerHTML = [
+    recent.length?`<a class="nudge primary" href="#intro">Say hello to the new ${recent.length}</a>`:'',
+    gaps.length?`<a class="nudge" href="#" data-go="profile"><span class="k">${pct}%</span> Finish your profile</a>`:'',
+    CROLE==='admin'?`<a class="nudge" href="#" data-go="admin">Invite alumni${N.invites.length?` · ${N.invites.length} pending`:''}</a>`:
+                    `<a class="nudge" href="#" data-go="directory">Browse the directory</a>`
+  ].filter(Boolean).join('');
+
+  // ── new this week ──
+  const intro = document.getElementById('intros');
+  if (recent.length){
+    intro.innerHTML = recent.slice(0,6).map(m=>{
+      const nm = m.full_name||m.email;
+      const p = N.profiles.find(x=>x.user_id===m.id);
+      const role = p?.headline || p?.job_title || (p?.company?`At ${p.company}`:'') || `Joined ${daysAgo(m.connect_joined_at)===0?'today':daysAgo(m.connect_joined_at)+' days ago'}`;
+      return `<div class="intro-row">${avTile(nm)}
+        <div class="intro-meta"><div class="nm">${esc(nm)}</div><div class="rl">${esc(role)}</div></div>
+        <button class="wave" data-msg="${m.id}" data-name="${esc(nm)}">Say hi</button></div>`;
+    }).join('');
+  } else {
+    intro.innerHTML = `<div class="intro-row"><div class="intro-meta"><div class="rl">
+      Nobody new in the last 30 days. ${CROLE==='admin'?'Invite alumni and they\'ll appear here as they join.':'New members show up here as they join.'}
+      </div></div></div>`;
+  }
+  document.getElementById('composerAv').textContent = initials(USER.full_name||USER.email);
+
+  // ── feed: announcements, in the mockup's post shape ──
+  const feed = document.getElementById('feed');
+  feed.innerHTML = N.anns.length ? N.anns.map(a=>{
+    const who = a.profiles?.full_name || 'PII';
+    return `<article class="post"><div class="post-hd">${avTile(who)}
+      <div style="min-width:0"><div class="nm">${esc(who)}</div><div class="rl">${fmtDate(a.created_at)}</div>
+      <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
+        ${a.pinned?'<span class="mtag cohort">Pinned</span>':''}<span class="mtag">Announcement</span></div></div></div>
+      <p class="post-body">${esc(a.body).replace(/\n/g,'<br>')}</p></article>`;
+  }).join('') : `<article class="post"><p class="post-body" style="color:var(--slate)">
+      ${CROLE==='admin'?'No announcements yet. The first one is what people see when they arrive.':'No announcements yet.'}</p>
+      ${CROLE==='admin'?'<div class="post-actions"><button data-go="announcements">Write the first one</button></div>':''}</article>`;
+
+  // ── rail ──
+  const prog = mine?.grad_program;
+  const cohortMates = prog ? N.profiles.filter(p=>p.grad_program===prog) : [];
+  document.querySelector('.rail').innerHTML = `
+    <section class="card">
+      <h3>${prog?'Your cohort':'Your profile'}</h3>
+      ${prog?`<p class="cohort-name">${esc(prog)}</p>
+        <p class="cohort-sub">${cohortMates.length} member${cohortMates.length===1?'':'s'}</p>`
+      :`<p class="cohort-name">${pct}% complete</p>
+        <p class="cohort-sub">People find each other by what's filled in.</p>`}
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <p class="cohort-sub" style="margin:0">${gaps.length?'Still to add: '+gaps.slice(0,3).map(g=>g[1]).join(', '):'Your profile is complete.'}</p>
+      <div class="stack" style="margin-top:14px">
+        ${(cohortMates.length?cohortMates:N.profiles).slice(0,7).map(p=>{
+            const m=N.members.find(x=>x.id===p.user_id); return avTile(m?(m.full_name||m.email):'?','xs');}).join('')}
+      </div>
+    </section>
+    <section class="card">
+      <h3>Members by city</h3>
+      ${cities.size ? [...cities].map(c=>`<div class="near-row"><span class="city">${esc(c)}</span>
+          <span class="ct">${N.profiles.filter(p=>p.location===c).length}</span></div>`).join('')
+        : `<div class="near-row" style="color:var(--slate);font-size:13px">No one has added a city yet. Add yours and you'll be first.</div>`}
+    </section>
+    <section class="card">
+      <h3>Coming up</h3>
+      ${N.events.length ? N.events.map(e=>{
+        const d=new Date(e.start_at);
+        return `<div class="ev"><div class="date">
+          <div class="m">${d.toLocaleDateString('en-US',{month:'short'})}</div>
+          <div class="d">${d.getDate()}</div></div>
+          <div><div class="ttl">${esc(e.title)}</div>
+          <div class="mt">${fmtDateTime(e.start_at)}${e.location?' · '+esc(e.location):''}</div></div></div>`;
+      }).join('') : `<div class="cohort-sub" style="margin:0">No events scheduled${CROLE==='admin'?' — a first gathering turns a list of names into a network.':'.'}</div>`}
+    </section>`;
+
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent = v||'';};
+  set('ct-directory', N.profiles.length); set('ct-cities', cities.size);
+  sb.from('connect_groups').select('id',{count:'exact',head:true}).eq('is_archived',false).then(r=>set('ct-groups', r.count));
+  set('ct-events', N.events.length);
+  sb.from('connect_jobs').select('id',{count:'exact',head:true}).then(r=>set('ct-jobs', r.count));
+}
+
+// ── CITIES / COHORTS: same card language, grouped from real profiles ──
+async function renderGrouped(key, title, blurb){
+  const N = await loadNetwork();
+  const groups = {};
+  N.profiles.forEach(p=>{ const k=p[key]; if(!k) return; (groups[k]=groups[k]||[]).push(p); });
+  const el = document.getElementById('view');
+  const keys = Object.keys(groups).sort((a,b)=>groups[b].length-groups[a].length);
+  el.innerHTML = `<section class="card"><div class="card-hd"><h2>${title}</h2></div>
+    <p class="card-note">${blurb}</p>
+    ${keys.length ? keys.map(k=>`<div class="intro-row">
+        <div class="intro-meta"><div class="nm">${esc(k)}</div>
+        <div class="rl">${groups[k].map(p=>{const m=N.members.find(x=>x.id===p.user_id);return esc(m?(m.full_name||m.email):'');}).filter(Boolean).join(', ')}</div></div>
+        <span class="ct" style="font-family:var(--mono);color:var(--slate)">${groups[k].length}</span></div>`).join('')
+      : `<div class="intro-row"><div class="intro-meta"><div class="rl">Nothing here yet — this fills in as people complete their profiles.</div></div></div>`}
+  </section>`;
+}
+async function renderCities(){ return renderGrouped('location','Cities','Where the network is. Add your city and you show up here.'); }
+
+
+// ── GROUPS ────────────────────────────────────────────────────
+function canModerate(authorId){ return CROLE==='admin' || authorId===USER.id; }
+function relTime(d){
+  const s=Math.floor((Date.now()-new Date(d))/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  if(s<604800) return Math.floor(s/86400)+'d ago';
+  return fmtDate(d);
+}
+function rail(sections){
+  const r=document.querySelector('.rail');
+  r.innerHTML = sections.filter(Boolean).join('');
+}
+
+async function renderGroups(){
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead pagehead-row">
+      <div><h1>Groups</h1><p>Member-run spaces built around a shared interest.</p></div>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openGroupModal()">+ New group</button>
+    </div>
+    <div class="bigsearch"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="grp-search" placeholder="Search groups" oninput="filterGroups()"></div>
+    <div class="chipbar">
+      <button class="fchip on" data-f="all" onclick="setGroupFilter('all')">All groups</button>
+      <button class="fchip" data-f="mine" onclick="setGroupFilter('mine')">My groups</button>
+    </div>
+    <div class="resultcount" id="grp-count"></div>
+    <div class="ggrid" id="grp-grid"></div>`;
+
+  const [{data:gs},{data:mems}] = await Promise.all([
+    sb.from('connect_groups').select('*,profiles!connect_groups_created_by_fkey(full_name)').eq('is_archived',false).order('created_at',{ascending:false}),
+    sb.from('connect_group_members').select('group_id,user_id')
+  ]);
+  const counts={}, mine=new Set();
+  (mems||[]).forEach(m=>{ counts[m.group_id]=(counts[m.group_id]||0)+1; if(m.user_id===USER.id) mine.add(m.group_id); });
+  const {data:posts} = await sb.from('connect_group_posts').select('group_id');
+  const pc={}; (posts||[]).forEach(p=>pc[p.group_id]=(pc[p.group_id]||0)+1);
+  GROUPS_CACHE = (gs||[]).map(g=>({...g, members:counts[g.id]||0, posts:pc[g.id]||0, joined:mine.has(g.id)}));
+
+  rail([
+    `<section class="card"><h3>Groups at a glance</h3>
+      <div class="near-row"><span>Total groups</span><span class="ct">${GROUPS_CACHE.length}</span></div>
+      <div class="near-row"><span>You've joined</span><span class="ct">${GROUPS_CACHE.filter(g=>g.joined).length}</span></div>
+    </section>`,
+    `<section class="card"><h3>How groups work</h3>
+      <p class="rail-note" style="font-size:12.5px;color:var(--slate);line-height:1.7;margin:0">
+      Anyone can start one. Join to post and reply. You can edit or delete anything you wrote${CROLE==='admin'?', and as an admin you can moderate anything in any group':''}.</p></section>`
+  ]);
+  drawGroups();
+}
+let GROUPS_CACHE=[], GROUP_FILTER='all';
+window.setGroupFilter=function(f){ GROUP_FILTER=f;
+  document.querySelectorAll('.fchip[data-f]').forEach(c=>c.classList.toggle('on',c.dataset.f===f)); drawGroups(); };
+window.filterGroups=function(){ drawGroups(); };
+function drawGroups(){
+  const q=(document.getElementById('grp-search')?.value||'').toLowerCase();
+  let list=GROUPS_CACHE.filter(g=>(g.name+' '+(g.description||'')+' '+(g.topic||'')).toLowerCase().includes(q));
+  if(GROUP_FILTER==='mine') list=list.filter(g=>g.joined);
+  document.getElementById('grp-count').textContent=`${list.length} group${list.length===1?'':'s'}`;
+  document.getElementById('grp-grid').innerHTML = list.map(g=>`<div class="gcard">
+      <div class="gcard-top"><div class="crest" style="background:${hueFor(g.name)}">${esc(initials(g.name))}</div>
+        <div><div class="gcard-n">${esc(g.name)}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:#9c988f;letter-spacing:.06em;text-transform:uppercase">${esc(g.topic||'Group')}</div></div></div>
+      <div class="gcard-d">${esc(g.description||'No description yet.')}</div>
+      <div class="gcard-f"><span class="n">${g.members} member${g.members===1?'':'s'} · ${g.posts} post${g.posts===1?'':'s'}</span>
+        <button class="btn btn-outline btn-sm" onclick="openGroup('${g.id}')">Open</button>
+        <button class="btn ${g.joined?'btn-outline':'btn-primary'} btn-sm" onclick="toggleJoin('${g.id}',${g.joined})">${g.joined?'Leave':'Join'}</button>
+      </div></div>`).join('')
+    || `<div class="inv" style="grid-column:1/-1"><h4>${GROUP_FILTER==='mine'?"You haven't joined any groups":'No groups yet'}</h4>
+        <p>${GROUP_FILTER==='mine'?'Join one from All groups, or start your own.':'Groups are how a directory turns into a community. Start the first one.'}</p>
+        <button class="btn btn-primary btn-sm" onclick="openGroupModal()">Create a group</button></div>`;
+}
+
+window.toggleJoin=async function(id,joined){
+  if(joined) await sb.from('connect_group_members').delete().eq('group_id',id).eq('user_id',USER.id);
+  else { const {error}=await sb.from('connect_group_members').insert({group_id:id,user_id:USER.id});
+         if(error){ toast('Could not join'); return; } }
+  toast(joined?'Left the group':'Joined');
+  if(document.getElementById('grp-grid')) renderGroups(); else openGroup(id);
+};
+
+window.openGroupModal=function(g){
+  document.getElementById('gm-id').value   = g?.id || '';
+  document.getElementById('gm-name').value = g?.name || '';
+  document.getElementById('gm-topic').value= g?.topic || '';
+  document.getElementById('gm-desc').value = g?.description || '';
+  document.getElementById('gm-title').textContent = g?'Edit group':'New group';
+  openModal('m-group');
+};
+window.saveGroup=async function(){
+  const id=document.getElementById('gm-id').value;
+  const name=document.getElementById('gm-name').value.trim();
+  if(!name){ toast('Give the group a name'); return; }
+  const row={ name, topic:document.getElementById('gm-topic').value.trim()||null,
+              description:document.getElementById('gm-desc').value.trim()||null };
+  let error;
+  if(id){ ({error}=await sb.from('connect_groups').update(row).eq('id',id)); }
+  else  { ({error}=await sb.from('connect_groups').insert({...row,created_by:USER.id})); }
+  if(error){ toast(/duplicate|unique/i.test(error.message)?'A group with that name already exists':'Could not save the group'); return; }
+  closeModal('m-group'); toast(id?'Group updated':'Group created');
+  id?openGroup(id):renderGroups();
+};
+window.deleteGroup=async function(id){
+  if(!confirm('Delete this group? Its posts and replies go with it.')) return;
+  const {error}=await sb.from('connect_groups').delete().eq('id',id);
+  if(error){ toast('Could not delete'); return; }
+  toast('Group deleted'); nav('groups');
+};
+
+let CURRENT_GROUP=null;
+window.openGroup=async function(id){
+  CURRENT_GROUP=id;
+  document.body.classList.add('not-home'); document.body.classList.remove('is-home');
+  CURRENT_VIEW='groups';
+  document.querySelectorAll('.nav a[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view==='groups'));
+  if (location.hash!=='#groups') location.hash='groups';
+  window.scrollTo(0,0);
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead"><p><a href="#groups" onclick="nav('groups');return false" style="color:var(--accent)">← All groups</a></p></div>
+    <div id="grp-head"></div><div id="grp-composer"></div><div id="grp-posts"></div>`;
+
+  const [{data:g},{data:mems},{data:posts}]=await Promise.all([
+    sb.from('connect_groups').select('*').eq('id',id).maybeSingle(),
+    sb.from('connect_group_members').select('user_id,role,profiles(id,full_name,email)').eq('group_id',id),
+    sb.from('connect_group_posts').select('*,profiles(id,full_name,email)').eq('group_id',id).order('created_at',{ascending:false})
+  ]);
+  if(!g){ el.innerHTML='<div class="inv"><h4>Group not found</h4></div>'; return; }
+  const joined=(mems||[]).some(m=>m.user_id===USER.id);
+  const owner=g.created_by===USER.id;
+
+  document.getElementById('grp-head').innerHTML=`<div class="lcard">
+    <div class="lcard-row"><div class="crest" style="background:${hueFor(g.name)};width:54px;height:54px;font-size:15px">${esc(initials(g.name))}</div>
+      <div style="flex:1;min-width:0">
+        <h1 style="font-family:var(--serif);font-size:23px;font-weight:600;margin:0 0 3px">${esc(g.name)}</h1>
+        <div class="lcard-meta">${esc(g.topic||'Group')} · ${(mems||[]).length} member${(mems||[]).length===1?'':'s'}</div>
+        <div class="lcard-body">${esc(g.description||'')}</div>
+        <div class="lcard-actions">
+          <button class="btn ${joined?'btn-outline':'btn-primary'} btn-sm" onclick="toggleJoin('${g.id}',${joined})">${joined?'Leave group':'Join group'}</button>
+          ${(owner||CROLE==='admin')?`<button class="btn btn-outline btn-sm" onclick='openGroupModal(${JSON.stringify(g).replace(/'/g,"&#39;")})'>Edit</button>
+            <button class="btn btn-outline btn-sm" onclick="deleteGroup('${g.id}')">Delete</button>`:''}
+        </div>
+      </div></div></div>`;
+
+  document.getElementById('grp-composer').innerHTML = joined
+    ? `<div class="card" style="margin-bottom:14px"><div class="composer">
+        <div class="av sm" style="background:${hueFor(USER.full_name||USER.email)}">${esc(initials(USER.full_name||USER.email))}</div>
+        <input id="gp-new" placeholder="Share something with ${esc(g.name)}…" onkeydown="if(event.key==='Enter')createPost()">
+        <button class="btn btn-primary btn-sm" onclick="createPost()">Post</button></div></div>`
+    : `<div class="inv" style="margin-bottom:14px"><h4>Join to take part</h4><p>Members of this group can post and reply. Anyone in the network can read along.</p>
+        <button class="btn btn-primary btn-sm" onclick="toggleJoin('${g.id}',false)">Join group</button></div>`;
+
+  const ids=(posts||[]).map(p=>p.id);
+  let replies=[];
+  if(ids.length){ const {data}=await sb.from('connect_group_replies').select('*,profiles(id,full_name,email)').in('post_id',ids).order('created_at'); replies=data||[]; }
+  drawPosts(posts||[], replies, joined);
+
+  rail([
+    `<section class="card"><h3>Members</h3>
+      ${(mems||[]).slice(0,10).map(m=>`<div class="near-row" style="cursor:pointer" onclick="viewProfile('${m.user_id}')">
+        ${avTile(m.profiles?.full_name||m.profiles?.email||'?','xs')}
+        <span style="margin-left:8px">${esc(m.profiles?.full_name||m.profiles?.email||'—')}</span>
+        ${m.role!=='member'?`<span class="ct">${esc(m.role)}</span>`:''}</div>`).join('')
+        || '<div class="rail-note" style="color:var(--slate);font-size:12.5px">No members yet.</div>'}
+    </section>`
+  ]);
+};
+
+function drawPosts(posts, replies, joined){
+  const byPost={}; replies.forEach(r=>(byPost[r.post_id]=byPost[r.post_id]||[]).push(r));
+  document.getElementById('grp-posts').innerHTML = posts.length ? posts.map(p=>{
+    const who=p.profiles?.full_name||p.profiles?.email||'—';
+    const rs=byPost[p.id]||[];
+    return `<div class="gpost" id="post-${p.id}">
+      <div class="gpost-hd">${avTile(who,'sm')}
+        <div style="flex:1"><div class="who">${esc(who)}</div>
+        <div class="when">${relTime(p.created_at)}${p.updated_at?' · edited':''}</div></div></div>
+      <div class="gpost-body" id="body-${p.id}">${esc(p.body)}</div>
+      <div class="gpost-foot">
+        <button onclick="toggleReply('${p.id}')">${rs.length?rs.length+' repl'+(rs.length===1?'y':'ies'):'Reply'}</button>
+        ${canModerate(p.author_id)?`<span class="sep">·</span><button onclick="editPost('${p.id}')">Edit</button>
+          <span class="sep">·</span><button onclick="deletePost('${p.id}')">Delete</button>`:''}
+        ${CROLE==='admin'&&p.author_id!==USER.id?'<span class="sep">·</span><span style="font-family:var(--mono);font-size:10px;color:#9c988f">ADMIN</span>':''}
+      </div>
+      <div id="replies-${p.id}" style="display:none">
+        ${rs.map(r=>{ const rw=r.profiles?.full_name||r.profiles?.email||'—';
+          return `<div class="greply" id="reply-${r.id}">${avTile(rw,'xs')}
+            <div style="flex:1;min-width:0"><div class="rm">${esc(rw)} · ${relTime(r.created_at)}${r.updated_at?' · edited':''}</div>
+            <div class="rtxt" id="rbody-${r.id}">${esc(r.body)}</div>
+            ${canModerate(r.author_id)?`<div class="gpost-foot" style="border:none;padding:6px 0 0;margin:0">
+              <button onclick="editReply('${r.id}')">Edit</button><span class="sep">·</span>
+              <button onclick="deleteReply('${r.id}','${p.id}')">Delete</button></div>`:''}
+            </div></div>`; }).join('')}
+        ${joined?`<div class="greply" style="border:none">
+          <input class="inline-ed" id="rnew-${p.id}" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')createReply('${p.id}')">
+          <button class="btn btn-primary btn-sm" onclick="createReply('${p.id}')">Send</button></div>`:''}
+      </div></div>`;
+  }).join('') : `<div class="inv"><h4>No posts yet</h4><p>${joined?'Start the conversation — the first post is usually the hardest.':'Nothing posted here yet.'}</p></div>`;
+}
+window.toggleReply=function(id){ const el=document.getElementById('replies-'+id);
+  el.style.display = el.style.display==='none'?'block':'none'; };
+
+window.createPost=async function(){
+  const inp=document.getElementById('gp-new'); const body=inp.value.trim();
+  if(!body) return; inp.value='';
+  const {error}=await sb.from('connect_group_posts').insert({group_id:CURRENT_GROUP,author_id:USER.id,body});
+  if(error){ toast('Could not post'); return; }
+  openGroup(CURRENT_GROUP);
+};
+window.editPost=function(id){
+  const el=document.getElementById('body-'+id); const cur=el.textContent;
+  el.innerHTML=`<textarea class="inline-ed" id="ed-${id}" rows="3"></textarea>
+    <div class="lcard-actions"><button class="btn btn-primary btn-sm" onclick="savePost('${id}')">Save</button>
+    <button class="btn btn-outline btn-sm" onclick="openGroup(CURRENT_GROUP)">Cancel</button></div>`;
+  const t=document.getElementById('ed-'+id); t.value=cur; t.focus();
+};
+window.savePost=async function(id){
+  const body=document.getElementById('ed-'+id).value.trim();
+  if(!body){ toast('Post cannot be empty'); return; }
+  const {error}=await sb.from('connect_group_posts').update({body,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){ toast('Could not save'); return; }
+  toast('Post updated'); openGroup(CURRENT_GROUP);
+};
+window.deletePost=async function(id){
+  if(!confirm('Delete this post and its replies?')) return;
+  const {error}=await sb.from('connect_group_posts').delete().eq('id',id);
+  if(error){ toast('Could not delete'); return; }
+  toast('Post deleted'); openGroup(CURRENT_GROUP);
+};
+window.createReply=async function(postId){
+  const inp=document.getElementById('rnew-'+postId); const body=inp.value.trim();
+  if(!body) return; inp.value='';
+  const {error}=await sb.from('connect_group_replies').insert({post_id:postId,author_id:USER.id,body});
+  if(error){ toast('Could not reply'); return; }
+  await openGroup(CURRENT_GROUP);
+  const r=document.getElementById('replies-'+postId); if(r) r.style.display='block';
+};
+window.editReply=function(id){
+  const el=document.getElementById('rbody-'+id); const cur=el.textContent;
+  el.innerHTML=`<textarea class="inline-ed" id="red-${id}" rows="2"></textarea>
+    <div class="lcard-actions"><button class="btn btn-primary btn-sm" onclick="saveReply('${id}')">Save</button>
+    <button class="btn btn-outline btn-sm" onclick="openGroup(CURRENT_GROUP)">Cancel</button></div>`;
+  const t=document.getElementById('red-'+id); t.value=cur; t.focus();
+};
+window.saveReply=async function(id){
+  const body=document.getElementById('red-'+id).value.trim();
+  if(!body){ toast('Reply cannot be empty'); return; }
+  const {error}=await sb.from('connect_group_replies').update({body,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){ toast('Could not save'); return; }
+  toast('Reply updated'); openGroup(CURRENT_GROUP);
+};
+window.deleteReply=async function(id,postId){
+  if(!confirm('Delete this reply?')) return;
+  const {error}=await sb.from('connect_group_replies').delete().eq('id',id);
+  if(error){ toast('Could not delete'); return; }
+  toast('Reply deleted'); await openGroup(CURRENT_GROUP);
+  const r=document.getElementById('replies-'+postId); if(r) r.style.display='block';
+};
+
+// ── DIRECTORY ─────────────────────────────────────────────────
+let DIR_CACHE = null;
+async function renderDirectory(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="pagehead"><h1>Directory</h1><p>Everyone in the PII network.</p></div>
+    <div class="bigsearch"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="dir-search" placeholder="Search by name, company or programme" oninput="filterDirectory()"/></div>
+    <div class="resultcount" id="dir-count"></div>
+    <div class="dgrid" id="dir-grid"></div>`;
+
+  const { data } = await sb.from('connect_alumni_profiles').select('*,profiles(id,full_name,email)').neq('visibility','private');
+  DIR_CACHE = (data||[]).filter(d=>d.profiles);
+  const N = await loadNetwork();
+  const cities=[...new Set(DIR_CACHE.map(d=>d.location).filter(Boolean))];
+  rail([
+    `<section class="card"><h3>The network</h3>
+      <div class="near-row"><span>Members</span><span class="ct">${N.members.length}</span></div>
+      <div class="near-row"><span>With a profile</span><span class="ct">${DIR_CACHE.length}</span></div>
+      <div class="near-row"><span>Cities</span><span class="ct">${cities.length}</span></div></section>`,
+    cities.length?`<section class="card"><h3>By city</h3>${cities.slice(0,6).map(c=>
+      `<div class="near-row" style="cursor:pointer" onclick="document.getElementById('dir-search').value='${esc(c)}';filterDirectory()">
+       <span class="city">${esc(c)}</span><span class="ct">${DIR_CACHE.filter(d=>d.location===c).length}</span></div>`).join('')}</section>`:'',
+    `<section class="card"><h3>Your profile</h3>
+      <p class="rail-note" style="color:var(--slate);font-size:12.5px;line-height:1.7;margin:0 0 12px">People find each other by what's filled in.</p>
+      <button class="btn btn-outline btn-sm" onclick="openEditProfile()">Edit your profile</button></section>`
+  ]);
+  drawDirectory(DIR_CACHE);
+}
+function drawDirectory(list){
+  const grid = document.getElementById('dir-grid');
+  const c=document.getElementById('dir-count'); if(c) c.textContent=`${list.length} member${list.length===1?'':'s'}`;
+  if (!list.length){ grid.innerHTML = `<div class="empty"><div class="ei">☰</div><div class="et">No alumni found.</div></div>`; return; }
+  grid.innerHTML = list.map(a=>`<div class="acard" onclick="viewProfile('${a.user_id}')">
+    <div class="acard-top"><div class="avatar" style="background:${hueFor(a.profiles.full_name||a.profiles.email)};color:#fff">${initials(a.profiles.full_name)}</div>
+      <div><div class="acard-name">${esc(a.profiles.full_name)}</div><div class="acard-head">${esc(a.headline||a.job_title||'')}</div></div></div>
+    <div class="acard-meta">${a.company?esc(a.company):''}${a.company&&a.location?' · ':''}${a.location?esc(a.location):''}</div>
+    ${a.grad_program?`<div class="tag">${esc(a.grad_program)}</div>`:''}</div>`).join('');
+}
+window.filterDirectory = function(){
+  const q = document.getElementById('dir-search').value.toLowerCase();
+  drawDirectory(DIR_CACHE.filter(a => (a.profiles.full_name||'').toLowerCase().includes(q) || (a.company||'').toLowerCase().includes(q) || (a.grad_program||'').toLowerCase().includes(q)));
+};
+window.viewProfile = async function(userId){
+  let { data: a } = await sb.from('connect_alumni_profiles').select('*,profiles(id,full_name,email)').eq('user_id',userId).maybeSingle();
+  if (!a){
+    if (userId === USER.id) return openEditProfile();
+    const { data: p } = await sb.from('profiles').select('id,full_name,email').eq('id',userId).maybeSingle();
+    if (!p) { toast('That profile is not available'); return; }
+    a = { user_id:userId, profiles:p };
+  }
+  const body = document.getElementById('m-profile-body');
+  const isMe = userId === USER.id;
+  body.innerHTML = `
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px">
+      <div class="avatar lg" style="background:${hueFor(a.profiles.full_name||a.profiles.email)};color:#fff">${initials(a.profiles.full_name)}</div>
+      <div><div style="font-family:var(--serif);font-size:20px;font-weight:700">${esc(a.profiles.full_name)}</div>
+      <div style="font-size:13px;color:rgba(14,14,12,.5)">${esc(a.headline||a.job_title||'')}</div></div>
+    </div>
+    ${a.bio?`<p style="font-size:13px;line-height:1.7;color:rgba(14,14,12,.7);margin-bottom:16px">${esc(a.bio)}</p>`:''}
+    <div style="font-size:12px;color:rgba(14,14,12,.55);line-height:2">
+      ${a.company?`<span class="mk">Work</span> ${esc(a.job_title||'')}${a.job_title?' at ':''}${esc(a.company)}<br>`:''}
+      ${a.location?`<span class="mk">Based</span> ${esc(a.location)}<br>`:''}
+      ${a.grad_program?`<span class="mk">Program</span> ${esc(a.grad_program)}<br>`:''}
+      ${a.linkedin_url?`<span class="mk">Link</span> <a href="${esc(a.linkedin_url)}" target="_blank" style="color:var(--accent)">LinkedIn</a><br>`:''}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('m-profile')">Close</button>
+      ${isMe?`<button class="btn btn-primary" onclick="openEditProfile()">Edit profile</button>`:`<button class="btn btn-primary" onclick="closeModal('m-profile');messageUser('${userId}','${esc(a.profiles.full_name)}')">Message</button>`}
+    </div>`;
+  openModal('m-profile');
+};
+
+// ── MESSAGES ──────────────────────────────────────────────────
+async function renderMessages(){
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="ph"><div><h1>Messages</h1><p>Direct and group conversations with alumni</p></div>
+    <div class="ph-act"><button class="btn btn-primary" onclick="NM_SELECTED_RESET();openModal('m-newmsg')">+ New Message</button></div></div>
+    <div class="msg-layout">
+      <div class="conv-list" id="conv-list"><div class="empty"><div class="et">Loading…</div></div></div>
+      <div class="thread-pane" id="thread-pane">
+        <div class="empty" style="margin:auto"><div class="ei">✉</div><div class="et">Select a conversation</div></div>
+      </div>
+    </div>`;
+  await loadConversations();
+}
+async function loadConversations(){
+  const { data: mems } = await sb.from('connect_conversation_members').select('conversation_id').eq('user_id', USER.id);
+  const convIds = (mems||[]).map(m=>m.conversation_id);
+  const list = document.getElementById('conv-list');
+  if (!convIds.length){ list.innerHTML = `<div class="empty"><div class="et">No conversations yet.</div></div>`; return; }
+
+  const { data: convs } = await sb.from('connect_conversations').select('*').in('id', convIds).order('created_at',{ascending:false});
+  const items = [];
+  for (const c of convs){
+    const { data: members } = await sb.from('connect_conversation_members').select('profiles(id,full_name)').eq('conversation_id', c.id);
+    const others = (members||[]).map(m=>m.profiles).filter(p=>p && p.id!==USER.id);
+    const title = c.title || others.map(o=>o.full_name).join(', ') || 'Conversation';
+    const { data: lastMsg } = await sb.from('connect_messages').select('body,created_at').eq('conversation_id', c.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    items.push({ id:c.id, title, preview: lastMsg?.body || 'No messages yet' });
+  }
+  list.innerHTML = items.map(i=>`<div class="conv-item" data-id="${i.id}" onclick="openConversation('${i.id}','${esc(i.title)}')">
+    <div class="avatar sm">${initials(i.title)}</div>
+    <div><div class="conv-title">${esc(i.title)}</div><div class="conv-prev">${esc(i.preview)}</div></div></div>`).join('');
+}
+window.openConversation = async function(convId, title){
+  ACTIVE_CONV = convId;
+  document.querySelectorAll('.conv-item').forEach(el=>el.classList.toggle('active', el.dataset.id===convId));
+  const pane = document.getElementById('thread-pane');
+  pane.innerHTML = `<div class="thread-head">${esc(title)}</div>
+    <div class="thread-body" id="thread-body"></div>
+    <div class="thread-input"><input id="thread-input" placeholder="Write a message…" onkeydown="if(event.key==='Enter')sendMessage()"/><button class="btn btn-primary btn-sm" onclick="sendMessage()">Send</button></div>`;
+  await loadMessages(convId);
+
+  if (MSG_CHANNEL) sb.removeChannel(MSG_CHANNEL);
+  MSG_CHANNEL = sb.channel('conv-'+convId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'connect_messages', filter:`conversation_id=eq.${convId}` }, payload => {
+      if (payload.new.sender_id !== USER.id) appendBubble(payload.new);
+    }).subscribe();
+};
+async function loadMessages(convId){
+  const { data } = await sb.from('connect_messages').select('*').eq('conversation_id', convId).order('created_at');
+  const body = document.getElementById('thread-body');
+  body.innerHTML = '';
+  (data||[]).forEach(appendBubble);
+  body.scrollTop = body.scrollHeight;
+}
+function appendBubble(m){
+  const body = document.getElementById('thread-body');
+  if (!body) return;
+  const mine = m.sender_id === USER.id;
+  const d = document.createElement('div');
+  d.className = 'bubble ' + (mine?'mine':'theirs');
+  d.innerHTML = `${esc(m.body)}<div class="bubble-meta">${fmtDateTime(m.created_at)}</div>`;
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+}
+window.sendMessage = async function(){
+  const input = document.getElementById('thread-input');
+  const body = input.value.trim();
+  if (!body || !ACTIVE_CONV) return;
+  input.value = '';
+  const { data, error } = await sb.from('connect_messages').insert({ conversation_id: ACTIVE_CONV, sender_id: USER.id, body }).select().single();
+  if (error){ toast('Failed to send'); return; }
+  appendBubble(data);
+};
+window.messageUser = async function(userId, name){
+  const { data: mems } = await sb.from('connect_conversation_members').select('conversation_id').eq('user_id', USER.id);
+  const myConvIds = (mems||[]).map(m=>m.conversation_id);
+  let existing = null;
+  if (myConvIds.length){
+    const { data: theirMems } = await sb.from('connect_conversation_members').select('conversation_id').eq('user_id', userId).in('conversation_id', myConvIds);
+    for (const tm of (theirMems||[])){
+      const { count } = await sb.from('connect_conversation_members').select('*',{count:'exact',head:true}).eq('conversation_id', tm.conversation_id);
+      if (count === 2) { existing = tm.conversation_id; break; }
+    }
+  }
+  let convId = existing;
+  if (!convId){
+    const { data: conv } = await sb.from('connect_conversations').insert({ created_by: USER.id, is_group:false }).select().single();
+    convId = conv.id;
+    await sb.from('connect_conversation_members').insert([{conversation_id:convId,user_id:USER.id},{conversation_id:convId,user_id:userId}]);
+  }
+  nav('messages');
+  setTimeout(()=>openConversation(convId, name), 300);
+};
+window.NM_SELECTED_RESET = function(){ NM_SELECTED = []; document.getElementById('nm-selected').innerHTML=''; document.getElementById('nm-search').value=''; document.getElementById('nm-results').innerHTML=''; };
+window.searchRecipients = async function(){
+  const q = document.getElementById('nm-search').value.trim();
+  if (!q){ document.getElementById('nm-results').innerHTML=''; return; }
+  const { data } = await sb.from('connect_alumni_profiles').select('user_id,profiles(id,full_name)').neq('user_id', USER.id);
+  const results = (data||[]).filter(d=>d.profiles && d.profiles.full_name?.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+  document.getElementById('nm-results').innerHTML = results.map(r=>`<div class="chk-row" style="cursor:pointer" onclick='NM_ADD("${r.user_id}","${esc(r.profiles.full_name)}")'>${esc(r.profiles.full_name)}</div>`).join('') || '<div style="font-size:12px;color:rgba(14,14,12,.4);padding:6px 0">No matches</div>';
+};
+window.NM_ADD = function(id,name){
+  if (NM_SELECTED.find(s=>s.id===id)) return;
+  NM_SELECTED.push({id,name});
+  document.getElementById('nm-selected').innerHTML = NM_SELECTED.map(s=>`<span class="tag">${esc(s.name)}</span>`).join('');
+  document.getElementById('nm-search').value=''; document.getElementById('nm-results').innerHTML='';
+};
+window.startConversation = async function(){
+  if (!NM_SELECTED.length){ toast('Select at least one recipient'); return; }
+  const isGroup = NM_SELECTED.length > 1;
+  const { data: conv } = await sb.from('connect_conversations').insert({ created_by:USER.id, is_group:isGroup, title: isGroup ? NM_SELECTED.map(s=>s.name).join(', ') : null }).select().single();
+  const members = [{conversation_id:conv.id,user_id:USER.id}, ...NM_SELECTED.map(s=>({conversation_id:conv.id,user_id:s.id}))];
+  await sb.from('connect_conversation_members').insert(members);
+  closeModal('m-newmsg');
+  await loadConversations();
+  openConversation(conv.id, conv.title || NM_SELECTED[0].name);
+};
+
+// ── FORUMS ────────────────────────────────────────────────────
+async function renderForums(){
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead"><h1>Forums</h1><p>Standing discussion boards for the whole network.</p></div>
+    <div id="cat-list"></div>`;
+  const { data: cats } = await sb.from('connect_forum_categories').select('*').order('sort_order');
+  const withCounts = await Promise.all((cats||[]).map(async c=>{
+    const { count } = await sb.from('connect_forum_threads').select('*',{count:'exact',head:true}).eq('category_id',c.id);
+    return {...c, count:count||0};
+  }));
+  document.getElementById('cat-list').innerHTML = withCounts.map(c=>`<div class="lcard"><div class="lcard-row">
+      <div class="crest" style="background:${hueFor(c.name)}">${esc(initials(c.name))}</div>
+      <div style="flex:1;min-width:0">
+        <div class="lcard-t"><button onclick="renderThreadList('${c.id}','${esc(c.name)}')">${esc(c.name)}</button></div>
+        <div class="lcard-body">${esc(c.description||'')}</div>
+        <div class="lcard-meta" style="margin:8px 0 0">${c.count} thread${c.count===1?'':'s'}</div>
+      </div></div></div>`).join('')
+    || `<div class="inv"><h4>No boards yet</h4><p>Forums are set up by PII. In the meantime, Groups let anyone start a space.</p>
+        <button class="btn btn-primary btn-sm" onclick="nav('groups')">Browse groups</button></div>`;
+  rail([
+    `<section class="card"><h3>Forums vs groups</h3>
+      <p class="rail-note" style="color:var(--slate);font-size:12.5px;line-height:1.7;margin:0 0 12px">
+      Forums are network-wide boards PII sets up. Groups are started by members around a shared interest.</p>
+      <button class="btn btn-outline btn-sm" onclick="nav('groups')">Browse groups</button></section>`
+  ]);
+}
+window.renderThreadList = async function(catId, catName){
+  if (!catName){
+    const { data: c } = await sb.from('connect_forum_categories').select('name').eq('id', catId).maybeSingle();
+    catName = c?.name || 'Forum';
+  }
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead pagehead-row">
+      <div><p><a href="#forums" onclick="nav('forums');return false" style="color:var(--accent)">← Forums</a></p>
+      <h1>${esc(catName)}</h1></div><div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openThreadModal('${catId}')">+ New thread</button></div>
+    <div id="thread-list"></div>`;
+  const { data: threads } = await sb.from('connect_forum_threads').select('*,profiles(full_name)').eq('category_id',catId).order('pinned',{ascending:false}).order('created_at',{ascending:false});
+  const withCounts = await Promise.all((threads||[]).map(async t=>{
+    const { count } = await sb.from('connect_forum_replies').select('*',{count:'exact',head:true}).eq('thread_id',t.id);
+    return {...t, count:count||0};
+  }));
+  document.getElementById('thread-list').innerHTML = withCounts.map(t=>`<div class="lcard"><div class="lcard-row">
+      ${avTile(t.profiles?.full_name||'—','sm')}
+      <div style="flex:1;min-width:0">
+        <div class="lcard-t"><button onclick="viewThread('${t.id}')">${t.pinned?'<span class="mtag cohort">Pinned</span> ':''}${esc(t.title)}</button></div>
+        <div class="lcard-meta">${esc(t.profiles?.full_name||'—')} · ${relTime(t.created_at)} · ${t.count} repl${t.count===1?'y':'ies'}</div>
+        <div class="lcard-body">${esc((t.body||'').slice(0,180))}${(t.body||'').length>180?'…':''}</div>
+      </div></div></div>`).join('')
+    || `<div class="inv"><h4>No threads yet</h4><p>Start the first one.</p>
+        <button class="btn btn-primary btn-sm" onclick="openThreadModal('${catId}')">New thread</button></div>`;
+  window._currentCat = catId; window._currentCatName = catName;
+  rail([`<section class="card"><h3>This board</h3>
+    <div class="near-row"><span>Threads</span><span class="ct">${withCounts.length}</span></div>
+    <div class="near-row"><span>Replies</span><span class="ct">${withCounts.reduce((a,t)=>a+t.count,0)}</span></div></section>`]);
+};
+window.openThreadModal = function(catId){ document.getElementById('m-thread').dataset.cat = catId; openModal('m-thread'); };
+window.createThread = async function(){
+  const catId = document.getElementById('m-thread').dataset.cat;
+  const title = document.getElementById('th-title').value.trim();
+  const body = document.getElementById('th-body').value.trim();
+  if (!title){ toast('Title required'); return; }
+  const { error } = await sb.from('connect_forum_threads').insert({ category_id: catId, author_id: USER.id, title, body });
+  if (error){ toast('Failed to post'); return; }
+  document.getElementById('th-title').value=''; document.getElementById('th-body').value='';
+  closeModal('m-thread'); toast('Thread posted');
+  renderThreadList(catId, window._currentCatName || 'Forum');
+};
+window.viewThread = async function(threadId){
+  const { data: t } = await sb.from('connect_forum_threads').select('*,profiles(full_name)').eq('id',threadId).maybeSingle();
+  if(!t){ toast('Thread not found'); return; }
+  const { data: replies } = await sb.from('connect_forum_replies').select('*,profiles(full_name)').eq('thread_id',threadId).order('created_at');
+  const el=document.getElementById('view');
+  const who=t.profiles?.full_name||'—';
+  el.innerHTML=`<div class="pagehead"><p><a href="#" onclick="renderThreadList('${t.category_id}', window._currentCatName||'Forum');return false" style="color:var(--accent)">← Back</a></p></div>
+    <article class="gpost">
+      <div class="gpost-hd">${avTile(who,'sm')}<div style="flex:1"><div class="who">${esc(who)}</div>
+        <div class="when">${relTime(t.created_at)}</div></div></div>
+      <div class="lcard-t" style="font-size:20px;margin-bottom:8px">${esc(t.title)}</div>
+      <div class="gpost-body">${esc(t.body||'')}</div></article>
+    <div class="resultcount">${(replies||[]).length} repl${(replies||[]).length===1?'y':'ies'}</div>
+    <div id="replies">${(replies||[]).map(r=>{const rw=r.profiles?.full_name||'—';
+      return `<div class="gpost"><div class="gpost-hd">${avTile(rw,'xs')}
+        <div style="flex:1"><div class="who" style="font-size:13.5px">${esc(rw)}</div>
+        <div class="when">${relTime(r.created_at)}</div></div></div>
+        <div class="gpost-body" style="font-size:14px">${esc(r.body)}</div></div>`;}).join('')}</div>
+    <div class="card" style="padding:16px 20px"><div class="fl"><label>Reply</label>
+      <textarea id="reply-body" rows="3" class="inline-ed"></textarea></div>
+      <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="postReply('${threadId}')">Post reply</button></div>`;
+  rail([`<section class="card"><h3>Thread</h3>
+    <p class="cohort-sub" style="margin:0">Started by ${esc(who)} · ${relTime(t.created_at)}</p></section>`]);
+};
+window.postReply = async function(threadId){
+  const body = document.getElementById('reply-body').value.trim();
+  if (!body) return;
+  const { error } = await sb.from('connect_forum_replies').insert({ thread_id: threadId, author_id: USER.id, body });
+  if (error){ toast('Failed to reply'); return; }
+  viewThread(threadId);
+};
+
+// ── JOBS ──────────────────────────────────────────────────────
+let JOBS_CACHE=[], JOB_FILTER='all';
+async function renderJobs(){
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead pagehead-row">
+      <div><h1>Jobs</h1><p>Roles shared by PII and people in the network.</p></div>
+      <div class="spacer"></div>
+      ${CROLE==='admin'?`<button class="btn btn-primary" onclick="openModal('m-job')">+ Post a job</button>`:''}
+    </div>
+    <div class="bigsearch"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="job-search" placeholder="Search by title, company or place" oninput="drawJobs()"></div>
+    <div class="chipbar" id="job-chips"></div>
+    <div class="resultcount" id="job-count"></div>
+    <div id="jobs-list"></div>`;
+  const { data } = await sb.from('connect_jobs').select('*,profiles(full_name)').eq('status','active').order('created_at',{ascending:false});
+  JOBS_CACHE=data||[];
+  const types=[...new Set(JOBS_CACHE.map(j=>j.job_type).filter(Boolean))];
+  document.getElementById('job-chips').innerHTML=
+    `<button class="fchip on" data-j="all" onclick="setJobFilter('all')">All roles</button>`+
+    types.map(t=>`<button class="fchip" data-j="${esc(t)}" onclick="setJobFilter('${esc(t)}')">${esc(t.replace('_',' '))}</button>`).join('')+
+    (JOBS_CACHE.some(j=>j.remote)?`<button class="fchip" data-j="remote" onclick="setJobFilter('remote')">Remote</button>`:'');
+  const cos=[...new Set(JOBS_CACHE.map(j=>j.company).filter(Boolean))];
+  rail([
+    `<section class="card"><h3>Jobs at a glance</h3>
+      <div class="near-row"><span>Open roles</span><span class="ct">${JOBS_CACHE.length}</span></div>
+      <div class="near-row"><span>Organisations</span><span class="ct">${cos.length}</span></div>
+      <div class="near-row"><span>Remote-friendly</span><span class="ct">${JOBS_CACHE.filter(j=>j.remote).length}</span></div></section>`,
+    cos.length?`<section class="card"><h3>Hiring now</h3>
+      ${cos.slice(0,6).map(c=>`<div class="near-row"><span class="city">${esc(c)}</span>
+        <span class="ct">${JOBS_CACHE.filter(j=>j.company===c).length}</span></div>`).join('')}</section>`:'',
+    `<section class="card"><h3>Know of a role?</h3>
+      <p class="rail-note" style="color:var(--slate);font-size:12.5px;line-height:1.7;margin:0 0 12px">
+      Openings travel further through people than through job boards.</p>
+      ${CROLE==='admin'?`<button class="btn btn-outline btn-sm" onclick="openModal('m-job')">Post a job</button>`
+        :`<button class="btn btn-outline btn-sm" onclick="nav('groups')">Share it in a group</button>`}</section>`
+  ]);
+  drawJobs();
+}
+window.setJobFilter=function(f){ JOB_FILTER=f;
+  document.querySelectorAll('.fchip[data-j]').forEach(c=>c.classList.toggle('on',c.dataset.j===f)); drawJobs(); };
+window.drawJobs=function(){
+  const q=(document.getElementById('job-search')?.value||'').toLowerCase();
+  let list=JOBS_CACHE.filter(j=>(j.title+' '+j.company+' '+(j.location||'')).toLowerCase().includes(q));
+  if(JOB_FILTER==='remote') list=list.filter(j=>j.remote);
+  else if(JOB_FILTER!=='all') list=list.filter(j=>j.job_type===JOB_FILTER);
+  document.getElementById('job-count').textContent=`${list.length} open role${list.length===1?'':'s'}`;
+  document.getElementById('jobs-list').innerHTML = list.map(j=>`<div class="lcard"><div class="lcard-row">
+    <div class="crest" style="background:${hueFor(j.company)}">${esc(initials(j.company))}</div>
+    <div style="flex:1;min-width:0">
+      <div class="lcard-t">${esc(j.title)}</div>
+      <div class="lcard-sub">${esc(j.company)}</div>
+      <div class="lcard-meta">${[j.location,j.remote?'Remote OK':null,j.job_type?j.job_type.replace('_',' '):null,'Posted '+fmtDate(j.created_at)].filter(Boolean).map(esc).join(' · ')}</div>
+      <div class="lcard-body">${esc((j.description||'').slice(0,240))}${(j.description||'').length>240?'…':''}</div>
+      <div class="lcard-actions">
+        ${j.apply_url?`<a class="btn btn-primary btn-sm" href="${esc(j.apply_url)}" target="_blank" rel="noopener">Apply →</a>`:''}
+        ${j.apply_email?`<a class="btn btn-outline btn-sm" href="mailto:${esc(j.apply_email)}">Email to apply</a>`:''}
+        ${CROLE==='admin'?`<button class="btn btn-outline btn-sm" onclick="closeJob('${j.id}')">Close role</button>`:''}
+      </div></div></div></div>`).join('')
+    || `<div class="inv"><h4>${q||JOB_FILTER!=='all'?'Nothing matches that':'No open roles right now'}</h4>
+        <p>${q||JOB_FILTER!=='all'?'Try a different search or clear the filters.':'When someone shares an opening it lands here.'}</p></div>`;
+};
+window.saveJob = async function(){
+  const title = document.getElementById('job-title').value.trim();
+  const company = document.getElementById('job-company').value.trim();
+  if (!title || !company){ toast('Title and company required'); return; }
+  const payload = { title, company,
+    location: document.getElementById('job-location').value.trim(),
+    job_type: document.getElementById('job-type').value,
+    remote: document.getElementById('job-remote').checked,
+    description: document.getElementById('job-desc').value.trim(),
+    apply_url: document.getElementById('job-url').value.trim() || null,
+    apply_email: document.getElementById('job-email').value.trim() || null,
+    posted_by: USER.id };
+  const { error } = await sb.from('connect_jobs').insert(payload);
+  if (error){ toast('Failed to post job'); return; }
+  closeModal('m-job'); toast('Job posted'); renderJobs();
+};
+window.closeJob = async function(id){
+  await sb.from('connect_jobs').update({ status:'closed' }).eq('id', id);
+  toast('Role closed'); renderJobs();
+};
+
+// ── EVENTS ────────────────────────────────────────────────────
+async function renderEvents(){
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead pagehead-row">
+      <div><h1>Events</h1><p>Meetups, webinars and gatherings across the network.</p></div>
+      <div class="spacer"></div>
+      ${CROLE==='admin'?`<button class="btn btn-primary" onclick="openModal('m-event')">+ New event</button>`:''}
+    </div><div id="events-list"></div>`;
+  const { data } = await sb.from('connect_events').select('*').order('start_at',{ascending:true});
+  const rows = await Promise.all((data||[]).map(async e=>{
+    const { data: mine } = await sb.from('connect_event_rsvps').select('status').eq('event_id',e.id).eq('user_id',USER.id).maybeSingle();
+    const { count } = await sb.from('connect_event_rsvps').select('*',{count:'exact',head:true}).eq('event_id',e.id).eq('status','going');
+    return {...e, myStatus:mine?.status, going:count||0};
+  }));
+  const now=Date.now();
+  const upcoming=rows.filter(e=>new Date(e.start_at)>=now), past=rows.filter(e=>new Date(e.start_at)<now).reverse();
+  const card=e=>{ const d=new Date(e.start_at);
+    return `<div class="lcard"><div class="lcard-row">
+      <div class="date" style="flex:none"><div class="m">${d.toLocaleDateString('en-US',{month:'short'})}</div><div class="d">${d.getDate()}</div></div>
+      <div style="flex:1;min-width:0">
+        <div class="lcard-t">${esc(e.title)}</div>
+        <div class="lcard-meta">${[fmtDateTime(e.start_at), e.is_virtual?'Virtual':e.location, e.going+' going'].filter(Boolean).map(esc).join(' · ')}</div>
+        <div class="lcard-body">${esc(e.description||'')}</div>
+        <div class="lcard-actions">
+          <button class="btn btn-sm ${e.myStatus==='going'?'btn-primary':'btn-outline'}" onclick="rsvp('${e.id}','going')">Going</button>
+          <button class="btn btn-sm ${e.myStatus==='interested'?'btn-primary':'btn-outline'}" onclick="rsvp('${e.id}','interested')">Interested</button>
+          ${e.is_virtual&&e.virtual_link?`<a class="btn btn-outline btn-sm" href="${esc(e.virtual_link)}" target="_blank" rel="noopener">Join link</a>`:''}
+        </div></div></div></div>`; };
+  document.getElementById('events-list').innerHTML =
+    (upcoming.length?`<div class="resultcount">Upcoming</div>`+upcoming.map(card).join(''):
+      `<div class="inv"><h4>Nothing on the calendar</h4><p>${CROLE==='admin'?'A first gathering is usually what turns a list of names into a network.':'When something is scheduled it shows up here.'}</p>
+      ${CROLE==='admin'?'<button class="btn btn-primary btn-sm" onclick="openModal(\'m-event\')">Add an event</button>':''}</div>`)
+    + (past.length?`<div class="resultcount" style="margin-top:26px">Past</div>`+past.map(card).join(''):'');
+  rail([
+    `<section class="card"><h3>Your calendar</h3>
+      <div class="near-row"><span>Upcoming</span><span class="ct">${upcoming.length}</span></div>
+      <div class="near-row"><span>You're going to</span><span class="ct">${rows.filter(e=>e.myStatus==='going').length}</span></div></section>`,
+    upcoming.length?`<section class="card"><h3>Next up</h3>
+      <p class="cohort-name" style="font-size:16px">${esc(upcoming[0].title)}</p>
+      <p class="cohort-sub" style="margin:0">${fmtDateTime(upcoming[0].start_at)}</p></section>`:''
+  ]);
+}
+window.rsvp = async function(eventId, status){
+  await sb.from('connect_event_rsvps').upsert({ event_id: eventId, user_id: USER.id, status });
+  renderEvents();
+};
+window.saveEvent = async function(){
+  const title = document.getElementById('ev-title').value.trim();
+  const start = document.getElementById('ev-start').value;
+  if (!title || !start){ toast('Title and start time required'); return; }
+  const isVirtual = document.getElementById('ev-virtual').checked;
+  const { error } = await sb.from('connect_events').insert({
+    title, start_at: new Date(start).toISOString(),
+    end_at: document.getElementById('ev-end').value ? new Date(document.getElementById('ev-end').value).toISOString() : null,
+    is_virtual: isVirtual,
+    location: isVirtual ? null : document.getElementById('ev-location').value.trim(),
+    virtual_link: isVirtual ? document.getElementById('ev-link').value.trim() : null,
+    description: document.getElementById('ev-desc').value.trim(),
+    created_by: USER.id });
+  if (error){ toast('Failed to create event'); return; }
+  closeModal('m-event'); toast('Event created'); renderEvents();
+};
+
+// ── ANNOUNCEMENTS (Feed) ──────────────────────────────────────
+async function renderAnnouncements(){
+  const el=document.getElementById('view');
+  el.innerHTML=`<div class="pagehead pagehead-row">
+      <div><h1>Feed</h1><p>Updates from The Public Innovation Institute.</p></div>
+      <div class="spacer"></div>
+      ${CROLE==='admin'?`<button class="btn btn-primary" onclick="openModal('m-ann')">+ New post</button>`:''}
+    </div>
+    <div class="bigsearch"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="ann-search" placeholder="Search the feed" oninput="drawAnns()"></div>
+    <div id="ann-list"></div>`;
+  const { data } = await sb.from('connect_announcements').select('*,profiles(full_name)').order('pinned',{ascending:false}).order('created_at',{ascending:false});
+  ANN_CACHE=data||[];
+  const N=await loadNetwork();
+  rail([
+    `<section class="card"><h3>Recent members</h3>
+      <div class="stack">${N.members.slice(-8).reverse().map(m=>avTile(m.full_name||m.email,'xs')).join('')}</div>
+      <p class="cohort-sub" style="margin:12px 0 0">${N.members.length} in the network</p>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="nav('directory')">View directory</button></section>`,
+    N.events.length?`<section class="card"><h3>Coming up</h3>
+      ${N.events.slice(0,3).map(e=>{const d=new Date(e.start_at);
+        return `<div class="ev"><div class="date"><div class="m">${d.toLocaleDateString('en-US',{month:'short'})}</div><div class="d">${d.getDate()}</div></div>
+        <div><div class="ttl">${esc(e.title)}</div><div class="mt">${fmtDateTime(e.start_at)}</div></div></div>`;}).join('')}</section>`:''
+  ]);
+  drawAnns();
+}
+let ANN_CACHE=[];
+window.drawAnns=function(){
+  const q=(document.getElementById('ann-search')?.value||'').toLowerCase();
+  const list=ANN_CACHE.filter(a=>(a.title+' '+a.body).toLowerCase().includes(q));
+  document.getElementById('ann-list').innerHTML = list.map(a=>{
+    const who=a.profiles?.full_name||'PII';
+    return `<article class="gpost">
+      <div class="gpost-hd">${avTile(who,'sm')}
+        <div style="flex:1"><div class="who">${esc(who)}</div>
+        <div class="when">${relTime(a.created_at)}</div></div>
+        ${a.pinned?'<span class="mtag cohort">Pinned</span>':''}</div>
+      <div class="lcard-t" style="font-size:17px;margin-bottom:6px">${esc(a.title)}</div>
+      <div class="gpost-body">${esc(a.body)}</div></article>`;
+  }).join('') || `<div class="inv"><h4>${q?'Nothing matches that':'Nothing posted yet'}</h4>
+      <p>${q?'Try a different search.':CROLE==='admin'?'The first post is what people see when they arrive.':'Updates from PII will show up here.'}</p></div>`;
+};
+window.saveAnnouncement = async function(){
+  const title = document.getElementById('ann-title').value.trim();
+  const body = document.getElementById('ann-body').value.trim();
+  if (!title || !body){ toast('Title and message required'); return; }
+  const { error } = await sb.from('connect_announcements').insert({ title, body, pinned: document.getElementById('ann-pin').checked, created_by: USER.id });
+  if (error){ toast('Failed to post'); return; }
+  document.getElementById('ann-title').value=''; document.getElementById('ann-body').value=''; document.getElementById('ann-pin').checked=false;
+  closeModal('m-ann'); toast('Posted'); HOME_CACHE=null; renderAnnouncements();
+};
+
+// ── ADMIN ─────────────────────────────────────────────────────
+async function renderAdmin(){
+  if (CROLE !== 'admin'){ nav('home'); return; }
+  const el = document.getElementById('view');
+  el.innerHTML = `<div class="pagehead pagehead-row">
+      <div><h1>Manage Alumni</h1><p>Add alumni manually or import from PII Learn.</p></div>
+      <div class="spacer"></div>
+      <button class="btn btn-outline" onclick="syncEligible()">↻ Refresh from PII Learn</button>
+      <button class="btn btn-primary" onclick="openModal('m-addalum')">+ Add Alumni</button></div>
+    <div class="sg" id="admin-stats"></div>
+    <div class="admin-tabs">
+      <div class="admin-tab active" data-t="invited" onclick="adminTab('invited')">Invited / Joined</div>
+      <div class="admin-tab" data-t="eligible" onclick="adminTab('eligible')">Eligible to Import</div>
+      <div class="admin-tab" data-t="members" onclick="adminTab('members')">Current Members</div>
+    </div>
+    <div id="admin-body"></div>`;
+  await loadAdminStats();
+  adminTab('invited');
+  const [{count:students},{count:onList}] = await Promise.all([
+    sb.from('profiles').select('id',{count:'exact',head:true}).eq('role','student'),
+    sb.from('connect_invited_alumni').select('email',{count:'exact',head:true})
+  ]);
+  rail([
+    `<section class="card"><h3>PII Learn</h3>
+      <div class="near-row"><span>Students</span><span class="ct">${students||0}</span></div>
+      <div class="near-row"><span>On the alumni list</span><span class="ct">${onList||0}</span></div></section>`,
+    `<section class="card"><h3>How importing works</h3>
+      <p class="rail-note" style="color:var(--slate);font-size:12.5px;line-height:1.7;margin:0">
+      Adding someone puts them on the alumni list. If they already have a PII Learn account they get access straight away;
+      otherwise send them the invite link so they can set a password.</p></section>`
+  ]);
+}
+async function loadAdminStats(){
+  const [{count:total},{count:joined},{count:invited}] = await Promise.all([
+    sb.from('connect_invited_alumni').select('*',{count:'exact',head:true}),
+    sb.from('connect_invited_alumni').select('*',{count:'exact',head:true}).eq('status','joined'),
+    sb.from('connect_invited_alumni').select('*',{count:'exact',head:true}).eq('status','invited'),
+  ]);
+  const { count: members } = await sb.from('profiles').select('id',{count:'exact',head:true}).neq('connect_role','none');
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="sc"><div class="sl">Members</div><div class="sv ac">${members||0}</div></div>
+    <div class="sc"><div class="sl">Total on List</div><div class="sv">${total||0}</div></div>
+    <div class="sc"><div class="sl">Pending Invite</div><div class="sv">${invited||0}</div></div>`;
+}
+window.adminTab = async function(t){
+  document.querySelectorAll('.admin-tab').forEach(el=>el.classList.toggle('active', el.dataset.t===t));
+  const body = document.getElementById('admin-body');
+  if (t === 'invited'){
+    const { data } = await sb.from('connect_invited_alumni').select('*').order('created_at',{ascending:false});
+    const rows = data||[];
+    body.innerHTML = `<div class="resultcount">${rows.length} on the alumni list</div>`
+      + (rows.map(i=>`<div class="mrow">
+          ${avTile(i.full_name||i.email,'sm')}
+          <div class="who"><div class="nm">${esc(i.full_name||'—')}</div><div class="em">${esc(i.email)}</div></div>
+          <span class="pill ${i.status==='joined'?'open':'pending'}">${i.status==='joined'?'Account active':'Needs a password'}</span>
+          <div class="acts">${i.status==='joined'?'<span class="meta">—</span>'
+            :`<button class="btn btn-outline btn-sm" onclick="copyInvite('${esc(i.email)}')">Copy invite link</button>`}</div>
+        </div>`).join('') || `<div class="empty"><div class="et">Nobody added yet.</div></div>`)
+      + (rows.some(i=>i.status!=='joined') ? `<p style="font-size:12px;color:rgba(14,14,12,.5);margin-top:14px;line-height:1.6;max-width:64ch">Adding someone here doesn't create an account or send email. Send them their invite link — they set their own password on the "Join with Invite" tab.</p>` : '');
+  } else if (t === 'members'){
+    body.innerHTML = `<div class="resultcount">Loading members…</div>`;
+    const [{data:mem},{data:aps}] = await Promise.all([
+      sb.from('profiles').select('id,full_name,email,connect_role,connect_joined_at').neq('connect_role','none').order('connect_joined_at'),
+      sb.from('connect_alumni_profiles').select('user_id,grad_program')
+    ]);
+    const prog={}; (aps||[]).forEach(a=>prog[a.user_id]=a.grad_program);
+    const admins=(mem||[]).filter(m=>m.connect_role==='admin').length;
+    body.innerHTML = `<div class="resultcount">${(mem||[]).length} member${(mem||[]).length===1?'':'s'}</div>`
+      + (mem||[]).map(m=>{
+        const me = m.id===USER.id;
+        const lastAdmin = m.connect_role==='admin' && admins<=1;
+        return `<div class="mrow">
+          ${avTile(m.full_name||m.email,'sm')}
+          <div class="who"><div class="nm">${esc(m.full_name||'—')}${me?' <span class="mk">you</span>':''}</div>
+            <div class="em">${esc(m.email)}</div></div>
+          <span class="pill ${m.connect_role==='admin'?'open':'pending'}">${esc(m.connect_role)}</span>
+          <span class="meta">${m.connect_joined_at?fmtDate(m.connect_joined_at):'—'}</span>
+          <div class="acts">${me||lastAdmin?'<span class="meta">—</span>':`
+            <button class="btn btn-outline btn-sm" onclick="setMemberRole('${m.id}','${m.connect_role==='admin'?'alumni':'admin'}','${esc(m.full_name||m.email)}')">${m.connect_role==='admin'?'Make alumni':'Make admin'}</button>
+            <button class="btn btn-outline btn-sm" onclick="removeMember('${m.id}','${esc(m.full_name||m.email)}')">Remove</button>`}
+          </div></div>`;}).join('')
+      + `<p style="font-size:12px;color:rgba(14,14,12,.5);margin-top:14px;line-height:1.6;max-width:64ch">
+        Removing someone revokes their Connect access and takes them out of the directory. Their PII Learn account,
+        coursework and enrolments are untouched, and you can add them back at any time.</p>`;
+  } else {
+    body.innerHTML = `<div class="resultcount">Loading students from PII Learn…</div>`;
+    const [{data:done},{data:enr},{data:invited}] = await Promise.all([
+      sb.from('connect_eligible_alumni').select('*'),
+      sb.from('enrollments').select('student_id,completed_at,courses(program_id,programs(name)),profiles!enrollments_student_id_fkey(id,full_name,email,role,connect_role)'),
+      sb.from('connect_invited_alumni').select('email,status')
+    ]);
+    const onList = new Set((invited||[]).map(i=>(i.email||'').toLowerCase()));
+
+    // Roll enrolments up per student so one row = one person.
+    const byStudent = {};
+    (enr||[]).forEach(e=>{
+      const p = e.profiles; if(!p || p.role!=='student') return;
+      const s = byStudent[p.id] = byStudent[p.id] || {
+        user_id:p.id, full_name:p.full_name, email:p.email, connect_role:p.connect_role,
+        program_name: e.courses?.programs?.name || null, total:0, done:0, last:null };
+      s.total++;
+      if (e.completed_at){ s.done++; if(!s.last || e.completed_at>s.last) s.last=e.completed_at; }
+    });
+    let rows = Object.values(byStudent)
+      .filter(s=>s.connect_role==='none' && !onList.has((s.email||'').toLowerCase()));
+    if (ELIG_MODE==='completed') rows = rows.filter(s=>s.done>0);
+    rows.sort((a,b)=>(b.done-a.done) || (a.full_name||'').localeCompare(b.full_name||''));
+
+    const completedAnywhere = (done||[]).length;
+    body.innerHTML = `
+      <div class="chipbar">
+        <button class="fchip ${ELIG_MODE==='completed'?'on':''}" onclick="setEligMode('completed')">Completed a course</button>
+        <button class="fchip ${ELIG_MODE==='all'?'on':''}" onclick="setEligMode('all')">All enrolled students</button>
+      </div>
+      ${ELIG_MODE==='completed' && completedAnywhere===0 ? `<div class="inv" style="text-align:left;margin-bottom:14px">
+        <h4 style="text-align:center">Nobody is marked complete in PII Learn</h4>
+        <p style="text-align:center">Every enrolment still has an empty completion date, so this list is empty by definition — not because the sync failed.
+        Either mark the cohort complete in PII Learn, or switch to <strong>All enrolled students</strong> and import them anyway.</p></div>`:''}
+      ${rows.length ? `
+        <div class="selbar"><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" onclick="toggleAllEligible(this)"/> Select all ${rows.length}</label>
+          <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="importSelected()">Add selected to Connect</button></div>
+        ${rows.map(r=>`<div class="mrow">
+          <input type="checkbox" class="elig-chk" value="${r.user_id}" data-email="${esc(r.email)}" data-name="${esc(r.full_name||'')}" data-program="${esc(r.program_name||'')}"/>
+          ${avTile(r.full_name||r.email,'sm')}
+          <div class="who"><div class="nm">${esc(r.full_name||'—')}</div><div class="em">${esc(r.email)}</div></div>
+          <span class="pill ${r.done?'open':'pending'}">${r.done} of ${r.total} done</span>
+        </div>`).join('')}
+        <button class="btn btn-primary" style="margin-top:6px" onclick="importSelected()">Add selected to Connect</button>`
+      : `<div class="empty"><div class="et">${ELIG_MODE==='all'
+          ? 'Every enrolled student is already on the alumni list.'
+          : 'No students have completed a course yet.'}</div></div>`}`;
+  }
+};
+window.setEligMode = function(m){ ELIG_MODE = m; adminTab('eligible'); };
+let ELIG_MODE = 'all';
+
+window.removeMember = async function(id, name){
+  if (!confirm(`Remove ${name} from PII Connect?\n\nThey lose access and leave the directory. Their PII Learn account and coursework are not affected.`)) return;
+  const purge = confirm(`Also delete everything ${name} has posted?\n\nOK = delete their posts and replies.\nCancel = keep their posts (recommended).`);
+  const { data, error } = await sb.rpc('connect_remove_member', { p_user_id:id, p_purge_content:purge });
+  if (error){ toast(error.message || 'Could not remove that member'); return; }
+  toast(`${data?.removed || name} removed${data?.content_kept===false?' — posts deleted':''}`);
+  HOME_CACHE=null; DIR_CACHE=null;
+  renderAdmin();
+};
+window.setMemberRole = async function(id, role, name){
+  if (!confirm(`Make ${name} ${role==='admin'?'an admin':'a regular member'}?${role==='admin'?'\n\nAdmins can post announcements, manage alumni and moderate every group.':''}`)) return;
+  const { error } = await sb.rpc('connect_set_role', { p_user_id:id, p_role:role });
+  if (error){ toast(error.message || 'Could not change that role'); return; }
+  toast(`${name} is now ${role}`);
+  renderAdmin();
+};
+window.inviteLink = function(email){
+  const base = location.origin + location.pathname.replace(/[^/]*$/, 'index.html');
+  return base + '?invite=' + encodeURIComponent(email);
+};
+window.copyInvite = async function(email){
+  try { await navigator.clipboard.writeText(inviteLink(email)); toast('Invite link copied — send it to ' + email); }
+  catch(e){ prompt('Copy this invite link:', inviteLink(email)); }
+};
+window.toggleAllEligible = function(cb){ document.querySelectorAll('.elig-chk').forEach(el=>el.checked=cb.checked); };
+window.syncEligible = function(){ adminTab('eligible'); toast('Refreshed from PII Learn'); };
+window.importSelected = async function(){
+  const checked = [...document.querySelectorAll('.elig-chk:checked')];
+  if (!checked.length){ toast('Select at least one'); return; }
+  const rows = checked.map(c => ({ email: c.dataset.email, full_name: c.dataset.name, program_name: c.dataset.program, source:'auto_import', invited_by: USER.id }));
+  const { error } = await sb.from('connect_invited_alumni').upsert(rows, { onConflict:'email' });
+  if (error){ toast('Import failed'); return; }
+  // Also grant immediately since they already have PII Learn accounts
+  for (const c of checked){
+    await sb.from('profiles').update({ connect_role:'alumni', connect_joined_at: new Date().toISOString() }).eq('id', c.value);
+    await sb.from('connect_alumni_profiles').upsert({ user_id: c.value, grad_program: c.dataset.program || null });
+    await sb.from('connect_invited_alumni').update({ status:'joined', joined_at: new Date().toISOString() }).eq('email', c.dataset.email);
+  }
+  toast(`Imported ${checked.length} alumni`);
+  renderAdmin();
+};
+window.addAlumniManual = async function(){
+  const email = document.getElementById('aa-email').value.trim();
+  const name = document.getElementById('aa-name').value.trim();
+  const program = document.getElementById('aa-program').value.trim();
+  if (!email){ toast('Email required'); return; }
+  const { error } = await sb.from('connect_invited_alumni').upsert({ email, full_name:name, program_name:program, source:'manual', invited_by: USER.id, status:'invited' }, { onConflict:'email' });
+  if (error){ toast('Failed to add'); return; }
+  // If they already have a PII Learn profile, grant access now
+  const { data: existing } = await sb.from('profiles').select('id').ilike('email', email).maybeSingle();
+  if (existing){
+    await sb.from('profiles').update({ connect_role:'alumni', connect_joined_at: new Date().toISOString() }).eq('id', existing.id);
+    await sb.from('connect_alumni_profiles').upsert({ user_id: existing.id, grad_program: program || null });
+    await sb.from('connect_invited_alumni').update({ status:'joined', joined_at: new Date().toISOString() }).eq('email', email);
+  }
+  document.getElementById('aa-email').value=''; document.getElementById('aa-name').value=''; document.getElementById('aa-program').value='';
+  closeModal('m-addalum');
+  if (existing){ toast('Added — they already have an account and can sign in now.'); }
+  else { await copyInvite(email); }
+  renderAdmin();
+};
+
+window.globalSearchGo = function(){
+  const q = document.getElementById('globalSearch').value.trim();
+  if (!q) return;
+  nav('directory');
+  setTimeout(()=>{ const el=document.getElementById('dir-search'); if(el){ el.value=q; filterDirectory(); } }, 350);
+};
+
+window.renderHome = renderHome;
+
+// Boot last: the module body above must finish evaluating before nav() exists.
+boot();
+
+</script>
+</body>
+</html>
